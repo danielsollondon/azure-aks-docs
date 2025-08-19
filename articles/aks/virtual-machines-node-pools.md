@@ -3,7 +3,7 @@ title: Use Virtual Machines node pools in Azure Kubernetes Services (AKS)
 description: Learn how to add multiple Virtual Machine types of a similar family to a node pool in an AKS cluster.
 ms.topic: how-to
 ms.custom: devx-track-azurecli
-ms.date: 06/26/2025
+ms.date: 08/20/2025
 ms.author: wilsondarko
 author: wdarko1
 # Customer intent: As a cluster operator or developer, I want to learn how to enable my cluster to create node pools with multiple Virtual Machine types. I want to minimize capacity constraints by having greater flexibility in VM size selection.
@@ -22,7 +22,9 @@ With Virtual Machines node pools, AKS directly manages the provisioning and boot
 A node pool consists of a set of virtual machines, where different virtual machine sizes are designated to support different types of workloads. These virtual machine sizes, referred to as SKUs, are categorized into different families that are optimized for specific purposes. For more information, see [VM SKUs][vm-SKU].
 
 To enable scaling of multiple virtual machine sizes, the Virtual Machines node pool type uses a `ScaleProfile` that contains configurations indicating how the node pool can scale, specifically the desired list of virtual machine size and the count of each size. A `ManualScaleProfile` is a scale profile that specifies one desired virtual machine size and the total count of that type in the nodepool. Only one virtual machine size is allowed in a `ManualScaleProfile`. You need to create a separate `ManualScaleProfile` for each virtual machine size in your node pool. When creating a new Virtual Machines node pool, you add an initial manual scale profile for a virtual machine size using the `vm-size` field and including a `node-count`, per the instructions below. You can also add additional manual scale profiles following the instructions for [adding manual scale profiles][add-a-manual-scale-profile-to-a-node-pool].
- 
+
+Virtual Machine node pools also allows `Auto` mode, which means the node pool can use [cluster autoscaler][cluster-autoscaler]. Any Virtual Machine node pools in `Auto` mode can only use one Virtual Machine size at a time. 
+
 > [!NOTE]
 > When creating a new Virtual Machines node pool, you can have multiple scale profiles, and you need at least one manual scale profile in your nodepool.
 
@@ -48,7 +50,6 @@ The following table highlights how Virtual Machines node pools compare with stan
 
 ### Limitations
 
-- [Cluster autoscaler][cluster autoscaler] is currently not supported.
 - [InifiniBand][InifiniBand] isn't available.
 - This feature isn't available in Azure portal. [Azure CLI][azure cli] or REST APIs must be used to perform CRUD operations or manage the pool.
 - [Node pool snapshot][node pool snapshot] isn't supported.
@@ -68,7 +69,7 @@ The following table highlights how Virtual Machines node pools compare with stan
 
 - Create an AKS cluster with Virtual Machines node pools using the [`az aks create`][az aks create] command with the `--vm-set-type` flag set to `"VirtualMachines"`.
 
-    The following example creates a cluster named *myAKSCluster* with a Virtual Machines node pool containing two nodes, generates SSH keys, sets the load balancer SKU to *standard*, and sets the Kubernetes version to *1.28.5*:
+    The following example creates a cluster named *myAKSCluster* with a Virtual Machines node pool containing two nodes, generates SSH keys, sets the load balancer SKU to *standard*, and sets the Kubernetes version to *1.32.5*:
 
     ```azurecli-interactive
     az aks create \
@@ -77,7 +78,7 @@ The following table highlights how Virtual Machines node pools compare with stan
         --vm-set-type "VirtualMachines" \
         --vm-sizes "Standard_D4s_v3" 
         --node-count 2 \
-        --kubernetes-version 1.28.5
+        --kubernetes-version 1.32.5
     ```
 
 ## Create a cluster with Windows enabled and a Windows Virtual Machine node pool
@@ -189,6 +190,91 @@ Virtual Machine node pools are available in Windows enabled clusters. The follow
         --current-vm-sizes "Standard_D8s_v3"
      ```
 
+## Cluster autoscaler with Virtual Machines Node Pools
+Virtual Machines node pools support [cluster autoscaler][cluster-autoscaler]. This can be enabled using the flag `--enable-cluster-autoscaler` during cluster creation, while adding a new node pool, or in updating an existing manual node pool.
+
+### Create an AKS cluster with Virtual Machines node pools and cluster-autoscaler enabled
+- Create an AKS cluster with Virtual Machines node pools using the [`az aks create`][az aks create] command with the `--vm-set-type` flag set to `"VirtualMachines"` and with the flag `--enable-cluster-autoscaler`.
+
+The following example creates a cluster named *myAKSCluster* with a Virtual Machines node pool with a node pool size of "Standard_D4s_v3" minimum node count of 2, maximum node count of 5, and sets the Kubernetes version to *1.32.5*:
+
+    ```azurecli-interactive
+    az aks create \
+       --resource-group myResourceGroup \
+       --name myAKSCluster \
+       --vm-set-type "VirtualMachines" \
+       --node-vm-size "Standard_D4s_v3" \
+       --enable-cluster-autoscaler \
+       --min-count 2 \
+       --max-count 5 \
+       --kubernetes-version 1.32.5
+    ```
+
+### Add a Virtual Machines node pool with cluster autoscaler enabled to an existing cluster
+- Create a Virtual Machines node pools using the [`az aks nodepool add`][az aks nodepool add] command with the `--vm-set-type` flag set to `"VirtualMachines"` and with the flag `--enable-cluster-autoscaler`.
+
+The following example adds VIrtual Machines nodepool *myvmpool* to a cluster named *myAKSCluster* using virtual machine size of "Standard_D4s_v3":
+
+    ```azurecli-interactive
+    az aks nodepool add \
+      --resource-group myResourceGroup \
+      --cluster-name myAKSCluster \
+      --name myvmpool \
+      --vm-set-type "VirtualMachines" \
+      --node-vm-size "Standard_D4s_v3" \
+      --enable-cluster-autoscaler \
+    ```   
+
+### Update a cluster autoscaler settings for a Virtual Machines node pool with cluster autoscaler enabled
+
+- Update the [cluster autoscaler][cluster-autoscaler] node count settings for a Virtual Machines node pools using the [`az aks nodepool update`][az aks nodepool update] command with the `--vm-set-type` flag set to `"VirtualMachines"` and with the flag `--update-cluster-autoscaler`.
+
+The following example updates settings for VIrtual Machines nodepool *myvmpool* in cluster named *myAKSCluster* using virtual machine size of "Standard_D4s_v3":
+
+    ```azurecli-interactive
+    az aks nodepool update \
+      --resource-group myResourceGroup \
+      --cluster-name myAKSCluster \
+      --name myvmpool \
+      --update-cluster-autoscaler \
+      --node-vm-size "Standard_D2_v3" \
+      --min-count 2 \
+      --max-count 5
+      ```
+
+### Update a Virtual Machines node pool from manual mode to cluster autoscaler enabled
+
+>[!Note]
+> Updating a manual mode Virtual Machines node pool to auto is only allowed when the node pool only has one manual scale profile. 
+
+The following example updates VIrtual Machines nodepool *myvmpool* in the cluster named *myAKSCluster* from `Manual` mode to `Auto` mode:
+
+    ```azurecli-interactive
+    az aks nodepool update \
+      --resource-group myResourceGroup \
+      --cluster-name myAKSCluster \
+      --name myvmpool \
+      --enable-cluster-autoscaler \
+      --min-count 2 \
+      --max-count 5
+    ```
+
+ ### Disable cluster autoscaler in Virtual Machines node pool
+
+You can disable [cluster autoscaler][cluster-autoscaler], or change the cluster from `Auto` mode to `Manual` mode.
+
+The following example updates VIrtual Machines nodepool *myvmpool* in the cluster named *myAKSCluster* from `Manual` mode to `Auto` mode:
+
+    ```azurecli-interactive
+    az aks nodepool update \
+      --resource-group myResourceGroup \
+      --cluster-name myAKSCluster \
+      --name myvmpool \
+      --disable-cluster-autoscaler \
+    ```
+ 
+
+
 ## Next steps
 
 In this article, you learned how to use Virtual Machines node pools in AKS. To learn more about node pools in AKS, see [Create node pools][create node pools].
@@ -209,7 +295,7 @@ In this article, you learned how to use Virtual Machines node pools in AKS. To l
 [az aks nodepool manual-scale update]: /cli/azure/aks/nodepool/manual-scale#az-aks-nodepool-manual-scale-update
 [az aks nodepool manual-scale delete]: /cli/azure/aks/nodepool/manual-scale#az-aks-nodepool-manual-scale-delete
 [node pool snapshot]: node-pool-snapshot.md
-[cluster autoscaler]: cluster-autoscaler-overview.md
+[cluster-autoscaler]: cluster-autoscaler-overview.md
 [InifiniBand]: /azure/virtual-machines/extensions/enable-infiniband
 [vm-SKU]: /azure/virtual-machines/sizes/overview
 [VMSS]: /azure/virtual-machine-scale-sets/overview
