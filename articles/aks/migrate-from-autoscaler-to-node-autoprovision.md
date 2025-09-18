@@ -11,21 +11,13 @@ author: wdarko1
 
 ---
 
-# Node auto provisioning
+# Migrate from Cluster Autoscaler to Node auto provisioning
 
-When you deploy workloads onto AKS, you need to make a decision about the node pool configuration regarding the Virtual Machine (VM) size needed. As your workloads become more complex, and require different CPU, memory, and capabilities to run, the overhead of having to design your VM configuration for numerous resource requests becomes difficult.
+This document provides instructions to migrate your existing Azure Kubernetes Service (AKS) cluster from using [cluster autoscaler][cluster-autoscaler] to [node auto provisioning][nap-main-doc]. 
 
 Node auto provisioning (NAP) uses pending pod resource requirements to decide the optimal virtual machine configuration to run those workloads in the most efficient and cost-effective manner.
 
 Node auto provisioning is based on the open source [Karpenter](https://karpenter.sh) project, and the [AKS Karpenter provider][aks-karpenter-provider], which is also open source. Node auto provisioning automatically deploys, configures, and manages Karpenter on your AKS clusters.
-
-## How node autoprovisioning works
-
-Node auto provisioning provisions, scales, and manages virtual machines (nodes) in a cluster in response to pending pod pressure. Node auto provisioning uses these key components:
-
-- **NodePool and AKSNodeClass**: Custom Resource Definitions that you create and manage to define node provisioning policies, VM specifications, and constraints for your workloads.
-- **NodeClaims**: Managed by node autoprovisioning to represent the current state of provisioned nodes that you can monitor.
-- **Workload resource requirements**: CPU, memory, and other specifications from your Pods, Deployments, Jobs, and other Kubernetes resources that drive provisioning decisions.
 
 ### Prerequisites
 
@@ -49,7 +41,7 @@ Node auto provisioning provisions, scales, and manages virtual machines (nodes) 
 - Right-size workloads for consolidation
   - Set proper resource requests/limits, replicas, and pod disruption budgets (PDBs) to allow for a gradual migration. This migration method will require properly set PDBs to ensure well-managed disruption of your workloads. 
 - Verify your system node pool
-  - AKS requires a system node pool for system components (such as CoreDNS, Karpent
+  - AKS requires a system node pool for system components (such as CoreDNS, Karpenter, etc.)
 
 ### Disable cluster autoscaler safely
 
@@ -313,6 +305,7 @@ Node auto provisioning can only be disabled when:
 [nap-nodepool-doc]: /azure/aks/node-autoprovision-node-pool.md
 [nap-networking-doc]: /azure/aks/node-autoprovision-networking.md
 [nap-observability]: /azure/aks/node-autoprovision#node-auto-provisioning-metrics
+[cluster-autoscaler]: /azure/aks/cluster-autoscale.md
 
 <!-- LINKS - external -->
 [aks-karpenter-provider]: https://github.com/Azure/karpenter-provider-azure
