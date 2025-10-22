@@ -16,6 +16,9 @@ The Kubernetes community [releases minor versions](https://kubernetes.io/release
 
 Minor version releases include new features and improvements. Patch releases are more frequent (sometimes weekly) and are intended for critical bug fixes within a minor version. Patch releases include fixes for security vulnerabilities or major bugs.
 
+> [!IMPORTANT]
+> Starting on **30 November 2025**, AKS will no longer support or provide security updates for Azure Linux 2.0. Starting on **31 March 2026**, node images will be removed, and you'll be unable to scale your node pools. Migrate to a supported Azure Linux version by [**upgrading your node pools**](/azure/aks/upgrade-aks-cluster) to a supported Kubernetes version or migrating to [`osSku AzureLinux3`](/azure/aks/upgrade-os-version). For more information, see [[Retirement] Azure Linux 2.0 node pools on AKS](https://github.com/Azure/AKS/issues/4988).
+
 ## Kubernetes versions
 
 Kubernetes uses the standard [Semantic Versioning](https://semver.org/) versioning scheme for each version:
@@ -50,10 +53,10 @@ For the past release history, see [Kubernetes history](https://github.com/kubern
 |--------------|-------------------|--------------|---------|-------------|-----------------------|
 | 1.29 | Dec 2023 | Feb 2024 | Mar 2024 | Mar 2025 | Until 1.33 GA |
 | 1.30 | Apr 2024 | Jun 2024 | Jul 2024 | Aug 22nd, 2025 | Until 1.34 GA |
-| 1.31 | Aug 2024 | Oct 2024 | Nov 2024 | Nov 21st, 2025 | Until 1.35 GA |
+| 1.31 | Aug 2024 | Oct 2024 | Nov 2024 | Nov 1st, 2025 | Until 1.35 GA |
 | 1.32 | Dec 2024 | Feb 2025 | Apr 2025 | Mar 2026 | Until 1.36 GA |
 | 1.33 | Apr 2025 | May 2025 | Jun 2025 | Jun 2026 | Until 1.37 GA |
-| 1.34 |  Aug 2025 | Aug 2025 | Sep 2025 | Sep 2026 | Until 1.38 GA |
+| 1.34 | Aug 2025 | Oct 2025 | Nov 2025 | Nov 2026 | Until 1.38 GA |
 
 ### LTS Versions
 
@@ -68,10 +71,10 @@ Long-term support (LTS) needs to be enabled in order to get extended support. Yo
 | 1.28 | Aug 2023 | Sep 2023 | Nov 2023 | Jan 2025 | Feb 2026|
 | 1.29 | Dec 2023 | Feb 2024 | Mar 2024 | Mar 2025 | Apr 2026|
 | 1.30 | Apr 2024 | Jun 2024 | Jul 2024 | Aug 22nd, 2025 | Jul 2026|
-| 1.31 | Aug 2024 | Oct 2024 | Nov 2024 | Nov 21st, 2025 | Nov 2026|
+| 1.31 | Aug 2024 | Oct 2024 | Nov 2024 | Nov 1st, 2025 | Nov 2026|
 | 1.32 | Dec 2024 | Feb 2025 | Apr 2025 | Mar 2026 | Mar 2027|
 | 1.33 | Apr 2025 | May 2025 | Jun 2025 | Jun 2026 | Jun 2027|
-| 1.34 | Aug 2025 | Aug 2025 | Sep 2025 | Sep 2026 | Sep 2027 |
+| 1.34 | Aug 2025 | Oct 2025 | Nov 2025 | Nov 2026 | Nov 2027 |
 
 ### AKS Kubernetes release schedule Gantt chart
 
@@ -176,7 +179,7 @@ AKS might support any number of **patches** based on upstream community release 
 
 Platform support policy is a reduced support plan for certain unsupported Kubernetes versions. During platform support, customers only receive support from Microsoft for AKS/Azure platform related issues. Any issues related to Kubernetes functionality and components aren't supported.
 
-Platform support policy applies to clusters in an n-3 version (where n is the latest supported AKS GA minor version), before the cluster drops to n-4. For example, Kubernetes v1.26 is considered platform support when v1.29 is the latest GA version. However, during the v1.30-GA release, v1.26 shall autoupgrade to v1.27. If you're a running an n-2 version, the moment it becomes n-3 it also becomes deprecated, and you enter into the platform support policy.
+Platform support policy applies to clusters in an n-3 version (where n is the latest supported AKS GA minor version), before the cluster drops to n-4. For example, Kubernetes v1.26 is considered platform support when v1.29 is the latest GA version. If you're a running an n-2 version, the moment it becomes n-3 , the version also becomes end of official support, and you enter into the platform support policy.
 
 AKS relies on the releases and patches from [Kubernetes](https://kubernetes.io/releases/), which is an Open Source project that only supports a sliding window of three minor versions. AKS can only guarantee [full support](#kubernetes-version-support-policy) while those versions are being serviced upstream. Since there's no more patches being produced upstream, AKS can either leave those versions unpatched or fork. Due to this limitation, platform support doesn't support anything from relying on Kubernetes upstream.
 
