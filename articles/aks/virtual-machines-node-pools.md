@@ -316,7 +316,7 @@ In this article, you learned how to use Virtual Machines node pools in AKS. To l
 [az aks nodepool manual-scale add]: /cli/azure/aks/nodepool/manual-scale#az-aks-nodepool-manual-scale-add
 [az aks nodepool manual-scale update]: /cli/azure/aks/nodepool/manual-scale#az-aks-nodepool-manual-scale-update
 [az aks nodepool manual-scale delete]: /cli/azure/aks/nodepool/manual-scale#az-aks-nodepool-manual-scale-delete
-[az aks nodepool update]: cli/azure/aks/nodepool#az-aks-nodepool-update
+[az aks nodepool update]: /cli/azure/aks/nodepool#az-aks-nodepool-update
 [node pool snapshot]: node-pool-snapshot.md
 [cluster-autoscaler]: cluster-autoscaler-overview.md
 [InifiniBand]: /azure/virtual-machines/extensions/enable-infiniband
