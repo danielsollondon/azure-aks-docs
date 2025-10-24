@@ -228,14 +228,14 @@ When using cluster autoscaler with Virtual Machine node pools,
 The following example creates a cluster named *myAKSCluster* with a Virtual Machines node pool with a node pool size of "Standard_D4s_v3" minimum node count of 2, maximum node count of 5, and sets the Kubernetes version to *1.32.5*:
 
 ```azurecli-interactive
-    az aks create \
-        --resource-group myResourceGroup \
-        --name myAKSCluster \
-        --vm-set-type "VirtualMachines" \
-        --node-vm-size "Standard_D4s_v3" 
-        --min-count 2 \
-        --max-count 5 \
-        --kubernetes-version 1.32.5
+az aks create \
+    --resource-group myResourceGroup \
+    --name myAKSCluster \
+    --vm-set-type "VirtualMachines" \
+    --node-vm-size "Standard_D4s_v3" 
+    --min-count 2 \
+    --max-count 5 \
+    --kubernetes-version 1.32.5
 ```
 
 ### Add a Virtual Machines node pool with cluster autoscaler enabled to an existing cluster
