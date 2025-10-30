@@ -205,6 +205,10 @@ When using cluster autoscaler with Virtual Machine node pools,
 - Scale up: autoscaler responds to pending pod pressure, and scale up the node count of a node pool with the same type of single SKU in that node pool. 
 - Scale down: a specific node is chosen by autoscaler based on the utilization of node. you can configure `scale-down-utilization-threshold`to adjust when cluster autoscaling triggers a scaling action. See [cluster autoscaler documentation][cluster-autoscaler] for more information on configuring autoscaling. 
 
+### Limitations
+- This feature is only available in public cloud.
+- GPU Nodes are not currently supported.
+
 ### Requirements
 - To enable cluster autoscaler with Virtual Machine node pools, the node pool must only use one VM size. All other manual scale profiles must be deleted before enabling cluster autoscaler.
 
@@ -220,6 +224,13 @@ When using cluster autoscaler with Virtual Machine node pools,
     
     # Update the aks-preview extension
     az extension update --name aks-preview
+```
+
+### Register feature flag
+Register the preview feature flag `VMsAgentAutoscalePreview` using the `az feature register` command:
+
+```azurecli-interactive
+    az feature register --namespace Microsoft.ContainerService --name VMsAgentPoolAutoscalePreview
 ```
 
 ### Create an AKS cluster with Virtual Machines node pools and cluster-autoscaler enabled
@@ -241,7 +252,7 @@ az aks create \
 ### Add a Virtual Machines node pool with cluster autoscaler enabled to an existing cluster
 - Create a Virtual Machines node pool using the [`az aks nodepool add`][az aks nodepool add] command with the `--vm-set-type` flag set to `"VirtualMachines"` and with the flag `--enable-cluster-autoscaler`.
 
-The following example adds Virtual Machines node pool *myvmpool* to a cluster named *myAKSCluster* using virtual machine size of "Standard_D4s_v3":
+The following example adds Virtual Machines node pool *myvmpool* with cluster autoscaler enabled to a cluster named *myAKSCluster* using virtual machine size of "Standard_D4s_v3", and a minimum node count of 2 and max count of 5:
 
 ```azurecli-interactive
 az aks nodepool add \
@@ -251,6 +262,8 @@ az aks nodepool add \
     --vm-set-type "VirtualMachines" \
     --node-vm-size "Standard_D4s_v3" \
     --enable-cluster-autoscaler
+    --min-count 2 \
+    --max-count 5 \
 ```
 
 ### Update cluster autoscaler settings for a Virtual Machines node pool with cluster autoscaler enabled
