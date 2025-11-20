@@ -1,9 +1,9 @@
 ---
-title: Migrate for Cluster Autoscaler to Node auto provisioning
+title: Migrate from Cluster Autoscaler to Node auto provisioning
 description: Learn about how to migrate your Azure Kubernetes Service (AKS) cluster from cluster autoscaler to node autoprovisioning.
 ms.topic: how-to
 ms.custom: devx-track-azurecli
-ms.date: 10/01/2025
+ms.date: 11/20/2025
 ms.author: wilsondarko
 author: wdarko1
 
@@ -19,14 +19,52 @@ Node auto provisioning (NAP) uses pending pod resource requirements to decide th
 
 Node auto provisioning is based on the open source [Karpenter](https://karpenter.sh) project, and the [AKS Karpenter provider][aks-karpenter-provider], which is also open source. Node auto provisioning automatically deploys, configures, and manages Karpenter on your AKS clusters.
 
-### Prerequisites
+## Cluster autoscaler vs. Node auto provisioning
+
+### Why migrate from cluster autoscaler to Node auto provisioning
+
+Node auto provisioning offers a large range of improved experiences compared to Cluster autoscaler. NAP offers more intelligent bin-packing of compute, node life cycle management, and minimizes operation overhead. 
+
+| **Reason to Migrate**           | **Cluster Autoscaler (CAS)**                              | **Node Auto Provisioning (NAP)**                                   |
+|---------------------------------|-----------------------------------------------------------|--------------------------------------------------------------------|
+| **VM Size Flexibility**          | Pre-existing node pools with single VM size per pool     | Dynamic provisioning of mixed VM sizes for cost/performance balance|
+| **Cost Optimization**           | Adds/removes nodes in pools; risk of underutilization    | Intelligent bin-packing reduces fragmentation and lowers costs      |
+| **Management Overhead**         | Requires manual tuning of CAS profiles                   | Fully managed experience integrated with AKS                        |
+| **Lifecycle Management**        | Basic scale-up/scale-down only                           | Advanced node lifecycle optimization; manage node updates, disruption + more |
+
+
+### Cluster Autoscaler profile settings vs. Node Auto Provisioning configuration settings
+
+The following table maps Cluster Autoscaler profile settings to Node Auto Provisioning configuration settings for the NodePool CRD. This table also shows the cluster autoscaler Azure CLI command and its NAP CRD equivalent.
+
+| **Cluster Autoscaler Profile Setting** | **Description** | **NAP Disruption Setting** | **Description** | **Example (CLI & YAML)** |
+|----------------------------------------|------------------|-----------------------------|------------------|---------------------------|
+| `scale-down-unneeded-time` | Time a node must be unneeded before eligible for scale down (default: 10m) | `consolidateAfter` | Time NAP waits after discovering consolidation opportunity before disrupting node | **CLI:**<br>`az aks update --resource-group <rg> --name <cluster> --cluster-autoscaler-profile scale-down-unneeded-time=10m`<br>**YAML:**<br>`disruption:`<br>`  consolidateAfter: 10m` |
+| `scale-down-unready-time` | Time an unready node must be unneeded before eligible for scale down (default: 20m) | `terminationGracePeriod` | Grace period for pod termination before node removal | **CLI:**<br>`az aks update --cluster-autoscaler-profile scale-down-unready-time=20m`<br>**YAML:**<br>`disruption:`<br>`  terminationGracePeriod: 20m` |
+| `scale-down-utilization-threshold` | Node utilization threshold for scale down (default: 0.5) | `consolidationPolicy` | Policy for consolidation: `WhenEmpty` or `WhenEmptyOrUnderUtilized` | **CLI:**<br>`az aks update --cluster-autoscaler-profile scale-down-utilization-threshold=0.5`<br>**YAML:**<br>`disruption:`<br>`  consolidationPolicy: WhenEmptyOrUnderUtilized` |
+| `max-graceful-termination-sec` | Max seconds to wait for pod termination during scale down (default: 600s) | `terminationGracePeriod` | Explicitly sets termination grace period for NAP nodes | **CLI:**<br>`az aks update --cluster-autoscaler-profile max-graceful-termination-sec=600`<br>**YAML:**<br>`disruption:`<br>`  terminationGracePeriod: 600s` |
+| `scan-interval` | How often autoscaler reevaluates cluster (default: 10s) | N/A | NAP does not use periodic scans; decisions are event-driven | **CLI:**<br>`az aks update --cluster-autoscaler-profile scan-interval=10s`<br>**YAML:**<br>`# Not applicable in NAP` |
+| `max-empty-bulk-delete` | Max empty nodes deleted at once (default: 10) | `budgets` | Rate limits voluntary disruptions (percentage or absolute nodes) | **CLI:**<br>`az aks update --cluster-autoscaler-profile max-empty-bulk-delete=10`<br>**YAML:**<br>`disruption:`<br>`  budgets:`<br>`    nodes: 10` |
+| `skip-nodes-with-local-storage` | Prevents deleting nodes with local storage | Annotation: `karpenter.sh/do-not-disrupt` | Blocks disruption for specific nodes or pods | **CLI:**<br>`az aks update --cluster-autoscaler-profile skip-nodes-with-local-storage=true`<br>**YAML:**<br>`metadata:`<br>`  annotations:`<br>`    karpenter.sh/do-not-disrupt: "true"` |
+| `skip-nodes-with-system-pods` | Prevents deleting nodes with system pods | Annotation: `karpenter.sh/do-not-disrupt` | Same behavior for NAP | **CLI:**<br>`az aks update --cluster-autoscaler-profile skip-nodes-with-system-pods=true`<br>**YAML:**<br>`metadata:`<br>`  annotations:`<br>`    karpenter.sh/do-not-disrupt: "true"` |
+| `balance-similar-node-groups` | Balances node pools across zones | N/A | NAP uses Karpenter’s provisioning logic; no direct equivalent | **CLI:**<br>`az aks update --cluster-autoscaler-profile balance-similar-node-groups=true`<br>**YAML:**<br>`# Not applicable in NAP` |
+| `expander` | Strategy for selecting node pool for scale-up | N/A | NAP dynamically provisions optimal VM sizes; no expander concept | **CLI:**<br>`az aks update --cluster-autoscaler-profile expander=least-waste`<br>**YAML:**<br>`# Not applicable in NAP` |
+| `max-node-provision-time` | Max time to wait for node provisioning (default: 15m) | N/A | NAP provisions nodes immediately based on pending pods | **CLI:**<br>`az aks update --cluster-autoscaler-profile max-node-provision-time=15m`<br>**YAML:**<br>`# Not applicable in NAP` |
+| `ok-total-unready-count` / `max-total-unready-percentage` | Limits unready nodes during autoscaling | `budgets` | Can enforce disruption limits during maintenance windows | **CLI:**<br>`az aks update --cluster-autoscaler-profile ok-total-unready-count=3`<br>**YAML:**<br>`disruption:`<br>`  budgets:`<br>`    percentage: 20%` |
+
+
+>[!NOTE]
+> Unlike cluster autoscaler, NAP does not use Azure CLI commands to manage node behavior, so all decision making for NAP-managed nodes is determiend by the CRDs.
+> For more on configuring your cluster specifications for NAP, visit our [NodePool documentation](./node-auto-provisioning-node-pools.md) and [AKSNodeClass documentation](./node-auto-provisioning-aksnodeclass.md).
+
+## Before you begin
 
 | Prerequisite                         | Notes                                                                                                        |
 |--------------------------------------|--------------------------------------------------------------------------------------------------------------|
 | **Azure Subscription**               | If you don't have an Azure subscription, you can create a [free account](https://azure.microsoft.com/free).  |
 | **Azure CLI**| `2.76.0` or later. To find the version, run `az --version`. For more information about installing or upgrading the Azure CLI, see [Install Azure CLI][azure cli].|                      
 
-## Limitations
+### Limitations
 
 - You can't enable node autoprovisioning in a cluster where node pools have cluster autoscaler enabled
 - NAP currently does not support
@@ -35,25 +73,27 @@ Node auto provisioning is based on the open source [Karpenter](https://karpenter
    - Service Principals
    - HTTP Proxy
 
-## Pre-migration checklist
+## Disable cluster autoscaler
+
+### Pre-migration checklist
 
 - Confirm cluster eligibility for node auto provisioning. For more on NAP requirements visit our [Overview of NAP documentation](/azure/aks/node-auto-provisioning?tabs=azure-cli#prerequisites)
 - Right-size workloads for consolidation
-  - Set proper resource requests/limits, replicas, and pod disruption budgets (PDBs) to allow for a gradual migration. This migration method will require properly set PDBs to ensure well-managed disruption of your workloads. 
-- Verify your system node pool
+  - Set proper [resource requests/limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container), replicas, and [pod disruption budgets (PDBs)](https://kubernetes.io/docs/tasks/run-application/configure-pdb/#specifying-a-poddisruptionbudget) to allow for a gradual migration. This migration method will require properly set PDBs to ensure well-managed disruption of your workloads. 
+- Verify your system node pool is active
   - AKS requires a system node pool for system components (such as CoreDNS, Karpenter, etc.), when NAP is enabled, it will be responsible for autoscaling the system pool. 
 
 ### Disable cluster autoscaler safely
 
 If cluster autoscaler is enabled cluster-wide, disable it at the cluster level using the `--disable-cluster-autoscaler` flag. Nodes aren’t removed when you disable cluster autoscaler, so your capacity stays steady.
 
-```
+```azurecli-interactive
 az aks update --resource-group myResourceGroup --name myAKSCluster --disable-cluster-autoscaler
 ```
 
-If cluster autoscaler is only enabled on select node pools, you also have the option to disable cluster autoscaler for specific node pools using the `-disable-cluster-autoscaler` flag.
+If cluster autoscaler is only enabled on select node pools, you also have the option to disable cluster autoscaler for specific node pools using the `--disable-cluster-autoscaler` flag.
 
-```
+```azurecli-interactive
 # Disable CAS on a specific pool
 az aks nodepool update \
   --resource-group myResourceGroup \
@@ -77,7 +117,7 @@ az aks nodepool scale \
 
 ### Enable node autoprovisioning on an existing cluster
 
-- Enable node autoprovisioning on an existing cluster using the `az aks update` command and set `--node-provisioning-mode` to `Auto`.
+Enable node autoprovisioning on an existing cluster using the `az aks update` command and set `--node-provisioning-mode` to `Auto`.
 
 ```azurecli-interactive
 az aks update --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP_NAME --node-provisioning-mode Auto
@@ -85,7 +125,15 @@ az aks update --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP_NAME --node-
 
 ### Define your first NodePool and AKSNodeClass
 
-After enabling node autoprovisioning on your cluster, you can create a basic NodePool and AKSNodeClass to start provisioning nodes. These customer resource definition (CRD) files are used by NAP to define the types of nodes provisioned for your workloads. Here's a simple example:
+#### [Basic](#tab/basic)
+
+After enabling node autoprovisioning on your cluster, you can create a basic NodePool and AKSNodeClass to start provisioning nodes. These custom resource definition (CRD) files are used by NAP to define the types of nodes provisioned for your workloads. Here's a simple example:
+
+This example creates a basic NodePool that:
+- Supports both spot and on-demand instances
+- Uses D-series VMs
+- Sets a CPU limit of 100
+- Enables consolidation when nodes are empty or underutilized
 
 ```yaml
 #nodepool-default.yaml
@@ -105,7 +153,7 @@ spec:
           values: [spot, on-demand]
         - key: karpenter.azure.com/sku-family
           operator: In
-          values: [D]
+          values: [D, E, F]
       expireAfter: Never
   limits:
     cpu: 100
@@ -126,11 +174,6 @@ spec:
 > [!IMPORTANT]
 > If your workloads depend on custom subnets or network policies, configure these in AKSNodeClass **before migrating workloads** to avoid scheduling failures. Visit our [AKSNodeClass documentation](./node-auto-provisioning-aksnodeclass.md) for details.
 
-This example creates a basic NodePool that:
-- Supports both spot and on-demand instances
-- Uses D-series VMs
-- Sets a CPU limit of 100
-- Enables consolidation when nodes are empty or underutilized
 
 You can now deploy the custom resources to your cluster with the following `kubectl` command:
 
@@ -138,29 +181,119 @@ You can now deploy the custom resources to your cluster with the following `kube
 kubectl apply -f nodepool-default.yaml
 ```
 
-### Cluster Autoscaler profile seetings vs. Node Auto Provisioning configuration settings
+#### [Advanced](#tab/advanced)
 
-The following table maps Cluster Autoscaler profile settings to Node Auto Provisioning configuration settings for the NodePool CRD. This table also shows the cluster autoscaler Azure CLI command and its NAP CRD equivalent.
+After enabling node autoprovisioning on your cluster, you can create a NodePool and AKSNodeClass to start provisioning nodes. These custom resource definition (CRD) files are used by NAP to define the types of nodes provisioned for your workloads. Here's a simple example:
 
-| **Cluster Autoscaler Profile Setting** | **Description** | **NAP Disruption Setting** | **Description** | **Example (CLI & YAML)** |
-|----------------------------------------|------------------|-----------------------------|------------------|---------------------------|
-| `scale-down-unneeded-time` | Time a node must be unneeded before eligible for scale down (default: 10m) | `consolidateAfter` | Time NAP waits after discovering consolidation opportunity before disrupting node | **CLI:**<br>`az aks update --resource-group <rg> --name <cluster> --cluster-autoscaler-profile scale-down-unneeded-time=10m`<br>**YAML:**<br>`disruption:`<br>`  consolidateAfter: 10m` |
-| `scale-down-unready-time` | Time an unready node must be unneeded before eligible for scale down (default: 20m) | `terminationGracePeriod` | Grace period for pod termination before node removal | **CLI:**<br>`az aks update --cluster-autoscaler-profile scale-down-unready-time=20m`<br>**YAML:**<br>`disruption:`<br>`  terminationGracePeriod: 20m` |
-| `scale-down-utilization-threshold` | Node utilization threshold for scale down (default: 0.5) | `consolidationPolicy` | Policy for consolidation: `WhenEmpty` or `WhenEmptyOrUnderUtilized` | **CLI:**<br>`az aks update --cluster-autoscaler-profile scale-down-utilization-threshold=0.5`<br>**YAML:**<br>`disruption:`<br>`  consolidationPolicy: WhenEmptyOrUnderUtilized` |
-| `max-graceful-termination-sec` | Max seconds to wait for pod termination during scale down (default: 600s) | `terminationGracePeriod` | Explicitly sets termination grace period for NAP nodes | **CLI:**<br>`az aks update --cluster-autoscaler-profile max-graceful-termination-sec=600`<br>**YAML:**<br>`disruption:`<br>`  terminationGracePeriod: 600s` |
-| `scan-interval` | How often autoscaler reevaluates cluster (default: 10s) | N/A | NAP does not use periodic scans; decisions are event-driven | **CLI:**<br>`az aks update --cluster-autoscaler-profile scan-interval=10s`<br>**YAML:**<br>`# Not applicable in NAP` |
-| `max-empty-bulk-delete` | Max empty nodes deleted at once (default: 10) | `budgets` | Rate limits voluntary disruptions (percentage or absolute nodes) | **CLI:**<br>`az aks update --cluster-autoscaler-profile max-empty-bulk-delete=10`<br>**YAML:**<br>`disruption:`<br>`  budgets:`<br>`    nodes: 10` |
-| `skip-nodes-with-local-storage` | Prevents deleting nodes with local storage | Annotation: `karpenter.sh/do-not-disrupt` | Blocks disruption for specific nodes or pods | **CLI:**<br>`az aks update --cluster-autoscaler-profile skip-nodes-with-local-storage=true`<br>**YAML:**<br>`metadata:`<br>`  annotations:`<br>`    karpenter.sh/do-not-disrupt: "true"` |
-| `skip-nodes-with-system-pods` | Prevents deleting nodes with system pods | Annotation: `karpenter.sh/do-not-disrupt` | Same behavior for NAP | **CLI:**<br>`az aks update --cluster-autoscaler-profile skip-nodes-with-system-pods=true`<br>**YAML:**<br>`metadata:`<br>`  annotations:`<br>`    karpenter.sh/do-not-disrupt: "true"` |
-| `balance-similar-node-groups` | Balances node pools across zones | N/A | NAP uses Karpenter’s provisioning logic; no direct equivalent | **CLI:**<br>`az aks update --cluster-autoscaler-profile balance-similar-node-groups=true`<br>**YAML:**<br>`# Not applicable in NAP` |
-| `expander` | Strategy for selecting node pool for scale-up | N/A | NAP dynamically provisions optimal VM sizes; no expander concept | **CLI:**<br>`az aks update --cluster-autoscaler-profile expander=least-waste`<br>**YAML:**<br>`# Not applicable in NAP` |
-| `max-node-provision-time` | Max time to wait for node provisioning (default: 15m) | N/A | NAP provisions nodes immediately based on pending pods | **CLI:**<br>`az aks update --cluster-autoscaler-profile max-node-provision-time=15m`<br>**YAML:**<br>`# Not applicable in NAP` |
-| `ok-total-unready-count` / `max-total-unready-percentage` | Limits unready nodes during autoscaling | `budgets` | Can enforce disruption limits during maintenance windows | **CLI:**<br>`az aks update --cluster-autoscaler-profile ok-total-unready-count=3`<br>**YAML:**<br>`disruption:`<br>`  budgets:`<br>`    percentage: 20%` |
+This example creates an advanced NodePool that:
+- Supports both spot and on-demand instances
+- Uses D, E, and F-series VMs
+- Sets a CPU limit of 100
+- Selects a 
+- Enables consolidation when nodes are empty or underutilized
 
+```yaml
+#nodepool-default.yaml
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    metadata:
+      labels:
+        intent: apps
+    spec:
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: [spot]
+        - key: karpenter.azure.com/sku-family
+          operator: In
+          values: [D, E, F]
+      expireAfter: Never
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 0s
+    spec:
+      nodeClassRef:
+        apiVersion: karpenter.azure.com/v1beta1
+        kind: AKSNodeClass
+        name: comprehensive-example
+---
+apiVersion: karpenter.azure.com/v1beta1
+kind: AKSNodeClass
+metadata:
+  name: comprehensive-example
+spec:
+  # Image family configuration
+  # Default: Ubuntu
+  # Valid values: Ubuntu, AzureLinux
+  imageFamily: Ubuntu
 
->[!NOTE]
-> Unlike cluster autoscaler, NAP does not use Azure CLI commands to manage node behavior, so all decision making for NAP-managed nodes is determiend by the CRDs.
-> For more on configuring your cluster specifications for NAP, visit our [NodePool documentation](./node-auto-provisioning-node-pools.md) and [AKSNodeClass documentation](./node-auto-provisioning-aksnodeclass.md).
+  # Virtual network subnet configuration (optional)
+  # If not specified, uses the default --vnet-subnet-id from Karpenter installation
+  vnetSubnetID: "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet"
+
+  # OS disk size configuration
+  # Default: 128 GB
+  # Minimum: 30 GB
+  osDiskSizeGB: 128
+
+  # Maximum pods per node configuration
+  # Default behavior depends on network plugin:
+  # - Azure CNI with standard networking: 30 pods
+  # - Azure CNI with overlay networking: 250 pods
+  # - Other configurations: 110 pods
+  # Range: 10-250
+  maxPods: 30
+
+  # Azure resource tags (optional)
+  # Applied to all VM instances created with this AKSNodeClass
+  tags:
+    Environment: "production"
+    Team: "platform-team"
+    Application: "web-service"
+    CostCenter: "engineering"
+
+  # Kubelet configuration (optional)
+  # All fields are optional with sensible defaults
+  kubelet:
+    # CPU management policy
+    # Default: "none"
+    # Valid values: none, static
+    cpuManagerPolicy: "static"
+
+    # CPU CFS quota enforcement
+    # Default: true
+    cpuCFSQuota: true
+
+    # CPU CFS quota period
+    # Default: "100ms"
+    cpuCFSQuotaPeriod: "100ms"
+
+    # Image garbage collection thresholds
+    # imageGCHighThresholdPercent must be greater than imageGCLowThresholdPercent
+    # Range: 0-100
+    imageGCHighThresholdPercent: 85
+    imageGCLowThresholdPercent: 80
+
+    # Topology manager policy
+    # Default: "none"
+    # Valid values: none, restricted, best-effort, single-numa-node
+    topologyManagerPolicy: "best-effort"
+
+    # Container log configuration
+    # containerLogMaxSize default: "50Mi"
+    containerLogMaxSize: "50Mi"
+    
+    # containerLogMaxFiles default: 5, minimum: 2
+    containerLogMaxFiles: 5
+
+    # Pod process limits
+    # Default: -1 (unlimited)
+    podPidsLimit: 4096
+```
 
 ## Migrate workloads from fixed pools to node auto provisioning managed nodes
 
