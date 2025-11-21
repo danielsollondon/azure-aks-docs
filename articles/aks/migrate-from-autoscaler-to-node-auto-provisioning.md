@@ -177,7 +177,7 @@ spec:
 
 You can now deploy the custom resources to your cluster with the following `kubectl` command:
 
-```
+```bash
 kubectl apply -f nodepool-default.yaml
 ```
 
@@ -295,6 +295,16 @@ spec:
     podPidsLimit: 4096
 ```
 
+> [!IMPORTANT]
+> If your workloads depend on custom subnets or network policies, configure custom subnets or network policies in the AKSNodeClass **before migrating workloads** to avoid scheduling failures. Visit our [AKSNodeClass documentation](./node-auto-provisioning-aksnodeclass.md) for details.
+
+
+You can now deploy the custom resources to your cluster with the following `kubectl` command:
+
+```bash
+kubectl apply -f nodepool-default.yaml
+```
+
 ## Migrate workloads from fixed pools to node auto provisioning managed nodes
 
 >[!NOTE]
@@ -302,13 +312,13 @@ spec:
 
 Now scale down user pools gradually (keep the system pool):
 
-```
-# For each user pool, step down in small increments (respect PDBs)
+```azurecli-interactive
+# For each user pool, step down to 0 (this command should respect properly set PDBs)
 az aks nodepool scale \
   --resource-group <RG> \
   --cluster-name <CLUSTER> \
   --name <USER_POOL> \
-  --node-count <LOWER_DESIRED>
+  --node-count 0
 ```
 
 As pods evict, node auto provisioning provisions replacement nodes per your NodePool and AKSNodeClass rules. If a user pool must go to zero, remember you can only do that on user pools (not system pool), and with cluster autoscaler disabled - which is already disabled in an earlier step.
@@ -319,31 +329,31 @@ As pods evict, node auto provisioning provisions replacement nodes per your Node
 ## Verify node auto provisioning 
 
 ### Check CRDs and understanding NAP fields
-- Check CRDs
+Check CRDs to confirm they are in use:
 
-```azurecli-interactive
+```bash
 # Verify CRDs
 kubectl get crd | grep karpenter
 ```
 
-- View full descriptions of each field using Help API in Kubernetes
+View full descriptions of each field using Help API in Kubernetes using the `kubectl explain` command:
 
-```azurecli-interactive
+```bash
 # Use help api to describe fields
 kubectl explain nodepool.spec
 ```
 
-### Confirm new NAP-managed nodes are being created
+## Confirm new NAP-managed nodes are being created
 
 To ensure that NAP is properly provisioning new nodes in response to pending pod pressure, verify that the new nodes are being created. Node auto provisioning produces cluster events that can be used to monitor deployment and scheduling decisions being made. You can view events through the Kubernetes events stream.
 
-```azurecli-interactive
+```bash
 kubectl get events -A --field-selector source=karpenter -w
 ```
 
 Alternatively you can view the NodeClaims that represent the nodes being created: 
 
-```azurecli-interactive
+```bash
 kubectl get nodeclaims
 ```
 
@@ -351,7 +361,7 @@ You should see a list of nodes NAP is provisioning. This confirms that NAP is pr
 
 
 
-### Clean up old autoscaling 
+## Clean up old autoscaling 
 
 - If you're using managed AKS cluster autoscaler only, cluster autoscaler is already disabled with the above steps. 
 - If you're using self-hosted cluster autoscaler installed in kube-system, scale the cluster autoscaler pods to zero and remove.
@@ -370,119 +380,16 @@ After you have completed your migration, there are more capabilities to fine tun
 - **Networking** - For more information of managing networking experiences like custom virtual networks, visit our [NAP networking documentation][nap-networking-doc]
 - **Observability** - Stream Karpenter events and expose NAP control-plane metrics via Azure Monitor managed Prometheus. For more visit our [NAP public documentation][nap-observability]
 
+## Next steps
 
-## Mapping Node Auto Provisioning vs. Cluster Autoscaler disruption logic
+For more information on node auto-provisioning in AKS, see the following articles:
 
-
-## Disabling node autoprovisioning
-
-Node auto provisioning can only be disabled when:
-
-- There are no existing node autoprovisioning-managed nodes. Use `kubectl get nodes -l karpenter.sh/nodepool` to view node autoprovisioning-managed nodes.
-- All existing karpenter.sh/NodePools have their `spec.limits.cpu` field set to 0.
-
-### Steps to disable node autoprovisioning
-
-1. Set all karpenter.sh/NodePools `spec.limits.cpu` field to 0. This action prevents new nodes from being created, but doesn't disrupt currently running nodes.
-
-> [!NOTE]
-> If you don't care about ensuring that every pod that was running on a node autoprovisioning node is migrated safely to a non-node autoprovisioning node,
-> you can skip steps 2 and 3 and instead use the `kubectl delete node` command for each node autoprovisioning-managed node.
->
-> **Skipping steps 2 and 3 is not recommended, as it might leave some pods pending and doesn't honor Pod Disruption Budgets (PDBs).**
->
-> **Don't run `kubectl delete node` on any nodes that aren't managed by node autoprovisioning.**
-
-2. Add the `karpenter.azure.com/disable:NoSchedule` taint to every karpenter.sh/NodePool.
-   ```yaml
-   apiVersion: karpenter.sh/v1
-   kind: NodePool
-   metadata:
-     name: default
-   spec:
-     template:
-       spec:
-         ...
-         taints:
-           - key: karpenter.azure.com/disable,
-             effect: NoSchedule
-   ```
-   
-   This action starts the process of migrating the workloads on the node autoprovisioning-managed nodes to non-NAP nodes, honoring Pod Disruption Budgets (PDBs) and disruption limits. Pods migrate to non-NAP nodes if they can fit. If there isn't enough fixed-size capacity, some node autoprovisioning-managed nodes remain.
-
-4. Scale up existing fixed-size ManagedCluster node pools, or create new fixed-size node pools, to take the load from the node auto provisioning-managed nodes.
-   As these nodes are added to the cluster the node auto provisioning-managed nodes are drained, and work is migrated to the fixed-scale nodes.
-
-5. Confirm that all node auto provisioning-managed nodes are deleted, using `kubectl get nodes -l karpenter.sh/nodepool`. If node autoprovisioning-managed nodes still exist, the cluster likely lacks fixed-scale capacity. Add more nodes so the remaining workloads can be migrated.
-6. Update the node provisioning mode parameter of the ManagedCluster to `Manual`.
-
-    #### [Azure CLI](#tab/azure-cli)
-
-      ```azurecli-interactive
-      az aks update \
-          --name $CLUSTER_NAME \
-          --resource-group $RESOURCE_GROUP_NAME \
-          --node-provisioning-mode Manual
-      ```
-
-    #### [ARM template](#tab/arm)
-
-    ```azurecli-interactive
-    az deployment group create --resource-group $RESOURCE_GROUP_NAME --template-file ./nap.json
-    ```
-
-    The `nap.json` file should contain the following ARM template. The value of the `properties.nodeProvisioningProfile.mode` field set to `Manual`
-    is what's performing the disablement:
-
-    ```JSON
-    {
-      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-      "contentVersion": "1.0.0.0",
-      "metadata": {},
-      "parameters": {},
-      "resources": [
-        {
-          "type": "Microsoft.ContainerService/managedClusters",
-          "apiVersion": "2025-05-01",
-          "sku": {
-            "name": "Base",
-            "tier": "Standard"
-          },
-          "name": "napcluster",
-          "location": "uksouth",
-          "identity": {
-            "type": "SystemAssigned"
-          },
-          "properties": {
-            "networkProfile": {
-                "networkPlugin": "azure",
-                "networkPluginMode": "overlay",
-                "networkPolicy": "cilium",
-                "networkDataplane":"cilium",
-                "loadBalancerSku": "Standard"
-            },
-            "dnsPrefix": "napcluster",
-            "agentPoolProfiles": [
-              {
-                "name": "agentpool",
-                "count": 3,
-                "vmSize": "standard_d2s_v3",
-                "osType": "Linux",
-                "mode": "System"
-              }
-            ],
-            "nodeProvisioningProfile": {
-              "mode": "Manual"
-            }
-          }
-        }
-      ]
-    }
-    ```
-
-
-
-
+- [Use node auto-provisioning in a custom virtual network](./node-auto-provisioning-custom-vnet.md)
+- [Configure networking for node auto-provisioning on AKS](./node-auto-provisioning-networking.md)
+- [Configure node pools for node auto-provisioning on AKS](./node-auto-provisioning-node-pools.md)
+- [Configure disruption policies for node auto-provisioning on AKS](./node-auto-provisioning-disruption.md)
+- [Upgrade node images for node auto-provisioning on AKS](./node-auto-provisioning-upgrade-image.md)
+- [Enable/Disable node auto-provisioning on AKS][use-nap-doc]
 
 ---
 <!-- LINKS - internal -->
@@ -506,6 +413,7 @@ Node auto provisioning can only be disabled when:
 [nap-networking-doc]: /azure/aks/node-autoprovision-networking
 [nap-observability]: /azure/aks/node-autoprovision#node-auto-provisioning-metrics
 [cluster-autoscaler]: /azure/aks/cluster-autoscaler
+[use-nap-doc]: /azure/aks/use-node-auto-provisioning
 
 <!-- LINKS - external -->
 [aks-karpenter-provider]: https://github.com/Azure/karpenter-provider-azure
