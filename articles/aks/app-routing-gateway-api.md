@@ -18,8 +18,9 @@ The application routing add-on Kubernetes Gateway API implementation deploys an 
 
 ## Limitations
 
-* The application routing Gateway API implementation and the [Istio service mesh add-on][istio-addon] cannot be enabled simultaneously.
+* The application routing Gateway API implementation and the [Istio service mesh add-on][istio-addon] cannot be enabled simultaneously. You must disable one first in order to enable the other.
 * The application routing Gateway API implementation uses the same [resource customization allowlist][resource-customization-allowlist] as the Istio add-on for validating ConfigMap customizations for `Gateway` resources. Customizations not on the allowlist are disallowed and blocked via add-on managed webhooks.
+* [Azure DNS and TLS certificate management][app-routing-dns-tls] via the application routing add-on is currently not supported for the Kubernetes Gateway API.
 
 ## Prerequisites
 
@@ -62,7 +63,7 @@ azure-service-mesh-ccp-validating-webhook   1          4m2s
 
 Follow the instructions in the [Managed Gateway API document][managed-gateway-api] to install the Kubernetes Gateway API CRDs onto your cluster. Note that use of self-managed Gateway API CRDs with the application routing add-on is unsupported.
 
-After installing the CRDs, you should also see the istio gateway customization ConfigMap get created:
+After installing the CRDs, you should also see the Istio gateway customization ConfigMap get created:
 
 ```bash
 kubectl get cm -n aks-istio-system
@@ -222,7 +223,7 @@ openssl x509 -req -sha256 -days 365 -CA httpbin_certs/example.com.crt -CAkey htt
     az aks enable-addons --addons azure-keyvault-secrets-provider --resource-group $RESOURCE_GROUP --name $CLUSTER
     ```
     
-3. Authorize the user-assigned managed identity of the add-on to access Azure Key Vault resource using access policy. Alternatively, if your Key Vault is using Azure RBAC for the permissions model, follow the instructions [here][akv-rbac-guide] to assign an Azure role of Key Vault for the add-on's user-assigned managed identity.
+3. If your Key Vault is using Azure RBAC for the permissions model, follow the instructions [here][akv-rbac-guide] to assign an Azure role of Key Vault Secrets User for the add-on's user-assigned managed identity. Alternatively, if your key vault is using the vault access policy permissions model, authorize the user-assigned managed identity of the add-on to access Azure Key Vault resource using access policy:
     
     ```bash
     OBJECT_ID=$(az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER --query 'addonProfiles.azureKeyvaultSecretsProvider.identity.objectId' -o tsv | tr -d '\r')
@@ -382,7 +383,7 @@ openssl x509 -req -sha256 -days 365 -CA httpbin_certs/example.com.crt -CAkey htt
         tls:
           mode: Terminate
           certificateRefs:
-          - name: httpbin-credential-2
+          - name: httpbin-credential
         allowedRoutes:
           namespaces:
             from: Selector
@@ -421,9 +422,9 @@ openssl x509 -req -sha256 -days 365 -CA httpbin_certs/example.com.crt -CAkey htt
     Get the gateway address and port:
 
     ```bash
-    kubectl wait --for=condition=programmed gtw httpbin-gateway
-    export INGRESS_HOST=$(kubectl get gtw httpbin-gateway -o jsonpath='{.status.addresses[0].value}')
-    export SECURE_INGRESS_PORT=$(kubectl get gtw httpbin-gateway -o jsonpath='{.spec.listeners[?(@.name=="https")].port}')
+    kubectl wait --for=condition=programmed gateways.gateway.networking.k8s.io httpbin-gateway
+    export INGRESS_HOST=$(kubectl get gateways.gateway.networking.k8s.io httpbin-gateway -o jsonpath='{.status.addresses[0].value}')
+    export SECURE_INGRESS_PORT=$(kubectl get gateways.gateway.networking.k8s.io httpbin-gateway -o jsonpath='{.spec.listeners[?(@.name=="https")].port}')
     ```
 
 2. Send an HTTPS request to access the `httpbin` service:
@@ -435,9 +436,67 @@ openssl x509 -req -sha256 -days 365 -CA httpbin_certs/example.com.crt -CAkey htt
 
     You should see the httpbin service return the 418 I’m a Teapot code.
 
+    > [!NOTE]
+    > To configure HTTPS ingress access to an HTTPS service, i.e., configure an ingress gateway to perform SNI passthrough instead of TLS termination on incoming requests, update the tls mode in the gateway definition to `Passthrough`. This instructs the gateway to pass the ingress traffic “as is”, without terminating TLS.
+
+## Versioning and Upgrades
+
+The application routing Gateway API implementation deploys and upgrades the Istio control plane based on the AKS cluster Kubernetes version. The Istio version is the maximum supported Istio minor version for the AKS version, which can be found in the follwoing table:. For instance, if you are on AKS version `1.29`, the maximum supported Istio minor version that is installed is `1.27`. Keep in mind that the maximum supported Istio version for a given Kubernetes version could differ between [Long-Term Support (LTS) clusters][aks-lts] and non-LTS clusters.
+
+|  Istio version | Upstream release  | AKS release  | End of life | Compatible AKS versions | Compatible AKS LTS versions |
+|--------------|-------------------|--------------|---------|-------------|-----------------------|-----------------------|
+| 1.27 | Aug 2025 | Sept 2025 | ~May 2026 (expected) | 1.29, 1.30, 1.31, 1.32, 1.33, 1.34 | 1.29, 1.30, 1.31, 1.32, 1.33, 1.34 |
+
+### Upgrades
+
+Upgrades of Istio control plane for the application routing Gateway API implementation occur in-place and are triggered in the following two scenarios:
+
+- Manual: The AKS cluster is upgraded to a new version which has a higher maximum supported Istio version corresponding to it. The Istio control plane will be upgraded to the higher minor version as part of the AKS cluster upgrade.
+- Automatic: A new Istio version is released for AKS and is now the maximum supported Istio version for the AKS cluster version. The Istio control plane on your cluster will automatically be upgraded to the new minor version after the release is rolled out to your region. Follow the AKS release notes to track new Istio version releases.
+
+## Resource customizations
+
+The application routing Gateway API implementation supports customization of the `Gateway` resources via annotations and ConfigMaps. Application routing uses the same resource customization allowlist as the Istio service mesh add-on for Gateway API resource customization. Follow the steps in the [Istio add-on Gateway API docs][istio-gateway-resource-customization] to configure resources generated for the `Gateways` and to see which fields fall under the [allowlist][resource-customization-allowlist].
+
+## Disable the application routing Gateway API implementation
+
+Run the following command to disable the application routing Gateway API implementation:
+
+```azurecli-interactive
+
+```
+
+### Cleanup Resources
+
+Run the following commands to delete the `Gateway` and `HttpRoute`:
+
+```bash
+kubectl delete gateways.gateway.networking.k8s.io httpbin-gateway
+kubectl delete httproute httpbin
+```
+
+If you created a ConfigMap to customize your `Gateway`, run the following command to delete the ConfigMap:
+
+```bash
+kubectl delete configmap gw-options
+```
+
+If you created a SecretProviderClass and secret to use for TLS termination, delete the following resources as well:
+
+```bash
+kubectl delete secret httpbin-credential
+kubectl delete pod secrets-store-sync-httpbin
+kubectl delete secretproviderclass httpbin-credential-spc
+```
+
 <!-- LINKS - internal -->
 
 [app-routing-nginx]: app-routing.md
+[app-routing-dns-tls]: app-routing-dns-ssl.md
+[aks-lts]: long-term-support.md
+[akv-rbac-guide]: /azure/key-vault/general/rbac-guide#using-azure-rbac-secret-key-and-certificate-permissions-with-key-vault
 [istio-addon]: about-istio.md
+[istio-gateway-resource-customization]: istio-gateway-api.md#resource-customizations
 [resource-customization-allowlist]: istio-gateway-api.md#resource-customization-allowlist
 [managed-gateway-api]: managed-gateway-api.md
+[istio-release-calendar]: istio-support-policy.md#service-mesh-add-on-release-calendar
