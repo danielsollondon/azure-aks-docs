@@ -16,13 +16,14 @@ ms.author: nshankar
 
 The application routing add-on now supports the Kubernetes Gateway API for ingress traffic management. If you are using [managed NGINX][app-routing-nginx] with the legacy Ingress API, we strongly recommend migrating to using the Kubernetes Gateway API implementation. 
 
-The application routing add-on Kubernetes Gateway API implementation deploys an Istio control plane to serve Kubernetes Gateway API resources. Unlike the [Istio service mesh add-on for AKS][istio-addon], the Istio control plane deployed via the application routing add-on only monitors Gateway API resources and does not support sidecar injection or other Istio Custom Resource Definitions (CRDs). Additionally, the application routing add-on Istio control plane is not revisioned and is upgraded in-place for both minor and patch version updates. Note that you cannot have both the application routing Kubernetes Gateway API implementaion and the Istio add-on enabled simultaneously on your cluster.
+The application routing add-on Kubernetes Gateway API implementation deploys an Istio control plane to reconcile Kubernetes Gateway API resources. Unlike the [Istio service mesh add-on for AKS][istio-addon], the Istio control plane deployed via the application routing add-on only monitors Gateway API resources and does not support sidecar injection or other Istio Custom Resource Definitions (CRDs). Additionally, the application routing add-on Istio control plane is not revisioned and is upgraded in-place for both minor and patch version updates. Note that you cannot have both the application routing Kubernetes Gateway API implementaion and the Istio add-on enabled simultaneously on your cluster.
 
 ## Limitations
 
 * The application routing Gateway API implementation and the [Istio service mesh add-on][istio-addon] cannot be enabled simultaneously. You must disable one first in order to enable the other.
 * The application routing Gateway API implementation uses the same [resource customization allowlist][resource-customization-allowlist] as the Istio add-on for validating ConfigMap customizations for `Gateway` resources. Customizations not on the allowlist are disallowed and blocked via add-on managed webhooks.
-* [Azure DNS and TLS certificate management][app-routing-dns-tls] via the application routing add-on is currently not supported for the Kubernetes Gateway API.
+* [Azure DNS and TLS certificate management][app-routing-dns-tls] via the application routing add-on is currently not supported for the Kubernetes Gateway API. You can follow the steps in the [Transport Layer Security (TLS) ingress gateway](#configure-a-tls-ingress-gateway) to configure a `Gateway` to perform TLS termination.
+* Configuring HTTPS ingress access to HTTPS services - i.e Server Name Indication (SNI) Passthrough - via the `TLSRoute` resource is currently unsupported.
 
 ## Prerequisites
 
@@ -63,7 +64,7 @@ azure-service-mesh-ccp-validating-webhook   1          4m2s
 
 ## Install Managed Gateway API CRDs
 
-Follow the instructions in the [Managed Gateway API document][managed-gateway-api] to install the Kubernetes Gateway API CRDs onto your cluster. Note that use of self-managed Gateway API CRDs with the application routing add-on is unsupported.
+Follow the instructions in the [Managed Gateway API document][managed-gateway-api] to install the Kubernetes Gateway API CRDs onto your cluster. Because the Managed Gateway API installation requires another implementation to be enabled first, you must enable the application routing Gateway API implementation prior to, or simultaneously with, enabling the Managed Gateway API CRDs. Note that use of self-managed Gateway API CRDs with the application routing add-on is unsupported.
 
 After installing the CRDs, you should also see the Istio gateway customization ConfigMap get created:
 
@@ -85,7 +86,8 @@ istio-gateway-class-defaults          2      43s
 First, deploy the sample `httpbin` application in the `default` namespace:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.26/samples/httpbin/httpbin.yaml
+export ISTIO_RELEASE="release-1.27"
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/$ISTIO_RELEASE/samples/httpbin/httpbin.yaml
 ```
 
 ### Create Kubernetes Gateway and HTTPRoute
@@ -111,8 +113,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: http
-  namespace: default
+  name: httpbin
 spec:
   parentRefs:
   - name: httpbin-gateway
@@ -129,7 +130,7 @@ EOF
 ```
 
 > [!NOTE]
-> The example above creates an external ingress load balancer service that's accessible from outside the cluster. You can add [annotations][annotation-customizations] to create an internal load balancer and customize other load balancer settings.
+> The example above creates an external ingress load balancer service that's accessible from outside the cluster. You can add [annotations][annotation-customizations] to create an [internal load balancer][azure-internal-lb] and customize other load balancer settings.
 
 Verify that a `Deployment`, `Service`, `HorizontalPodAutoscaler`, and `PodDisruptionBudget` get created for `httpbin-gateway`:
 
@@ -188,7 +189,7 @@ You should see an `HTTP 200` response.
 
 ### Securing ingress traffic with the Kubernetes Gateway API
 
-The application routing add-on supports syncing secrets from Azure Key Vault (AKV) for securing Gateway API ingress traffic with Transport Layer Security (TLS) termination or Server Name Indication (SNI) passthrough. Follow the steps below to create certificates and keys to terminate TLS traffic at the Gateway.
+The application routing add-on supports syncing secrets from Azure Key Vault (AKV) for securing Gateway API ingress traffic with TLS termination. Follow the steps below to create certificates and keys to terminate TLS traffic at the Gateway.
 
 #### Required client/server certificates and keys
 
@@ -438,14 +439,13 @@ openssl x509 -req -sha256 -days 365 -CA httpbin_certs/example.com.crt -CAkey htt
 
     You should see the httpbin service return the 418 I’m a Teapot code.
 
-    > [!NOTE]
-    > To configure HTTPS ingress access to an HTTPS service, i.e., configure an ingress gateway to perform SNI passthrough instead of TLS termination on incoming requests, update the tls mode in the gateway definition to `Passthrough`. This instructs the gateway to pass the ingress traffic “as is”, without terminating TLS.
-
 ## Versioning and Upgrades
 
-The application routing Gateway API implementation deploys and upgrades the Istio control plane based on the AKS cluster Kubernetes version. The Istio version is the maximum supported Istio minor version for the AKS version, which can be found in the follwoing table:. For instance, if you are on AKS version `1.29`, the maximum supported Istio minor version that is installed is `1.27`. Keep in mind that the maximum supported Istio version for a given Kubernetes version could differ between [Long-Term Support (LTS) clusters][aks-lts] and non-LTS clusters.
+The application routing Gateway API implementation deploys and upgrades the Istio control plane based on the AKS cluster Kubernetes version **for both minor version and patch version upgrades**.
 
-|  Istio version | Upstream release  | AKS release  | End of life | Compatible AKS versions | Compatible AKS LTS versions |
+The Istio version is the maximum supported Istio minor version for the AKS version, which can be found in the follwoing table. For instance, if you are on AKS version `1.29`, the maximum supported Istio minor version that is installed is `1.27`. Keep in mind that the maximum supported Istio version for a given Kubernetes version could differ between [Long-Term Support (LTS) clusters][aks-lts] and non-LTS clusters.
+
+| Istio version | Upstream release | AKS release | End of life | Compatible AKS versions | Compatible AKS LTS versions |
 |--------------|-------------------|--------------|---------|-------------|-----------------------|-----------------------|
 | 1.27 | Aug 2025 | Sept 2025 | ~May 2026 (expected) | 1.29, 1.30, 1.31, 1.32, 1.33, 1.34 | 1.29, 1.30, 1.31, 1.32, 1.33, 1.34 |
 
@@ -454,7 +454,10 @@ The application routing Gateway API implementation deploys and upgrades the Isti
 Upgrades of Istio control plane for the application routing Gateway API implementation occur in-place and are triggered in the following two scenarios:
 
 - Manual: The AKS cluster is upgraded to a new version which has a higher maximum supported Istio version corresponding to it. The Istio control plane will be upgraded to the higher minor version as part of the AKS cluster upgrade.
-- Automatic: A new Istio version is released for AKS and is now the maximum supported Istio version for the AKS cluster version. The Istio control plane on your cluster will automatically be upgraded to the new minor version after the release is rolled out to your region. Follow the AKS release notes to track new Istio version releases.
+- Automatic: A new Istio version is released for AKS and is now the maximum supported Istio version for the AKS cluster version. The Istio control plane on your cluster will automatically be upgraded to the new minor version after the release is rolled out to your region. Follow the [AKS release notes][aks-release-notes] and [AKS release tracker][aks-release-tracker] to track new Istio version releases and see when the new version has rolled out to your region.
+
+> [!NOTE]
+> Patch version upgrades of the Istio control plane are triggered automatically. Minor version upgrades can be triggered either automatically or manually depending on the AKS version and timing of Istio minor version releases.
 
 ## Resource customizations
 
@@ -493,10 +496,14 @@ kubectl delete secretproviderclass httpbin-credential-spc
 
 <!-- LINKS - internal -->
 
+[annotation-customization]: istio-gateway-api.md#annotation-customizations
 [app-routing-nginx]: app-routing.md
 [app-routing-dns-tls]: app-routing-dns-ssl.md
 [aks-lts]: long-term-support.md
 [akv-rbac-guide]: /azure/key-vault/general/rbac-guide#using-azure-rbac-secret-key-and-certificate-permissions-with-key-vault
+[azure-internal-lb]: ./internal-lb.md
+[aks-release-notes]: https://github.com/azure/aks/releases
+[aks-release-tracker]: ./release-tracker.md
 [istio-addon]: about-istio.md
 [istio-gateway-resource-customization]: istio-gateway-api.md#resource-customizations
 [resource-customization-allowlist]: istio-gateway-api.md#resource-customization-allowlist

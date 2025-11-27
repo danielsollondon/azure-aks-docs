@@ -400,7 +400,7 @@ The Istio service mesh add-on supports syncing secrets from Azure Key Vault for 
 
 ## Annotation customizations
 
-You can add annotations under `spec.infrastructure.annotations` to [configure load balancer settings][azure-aks-load-balancer-annotations] for the `Gateway`. For instance, to create an internal load balancer attached to a specific subnet, you can create a `Gateway` with the following annotations:
+You can add annotations under `spec.infrastructure.annotations` to [configure load balancer settings][azure-aks-load-balancer-annotations] for the `Gateway`. For instance, to create an [internal load balancer][azure-internal-lb] attached to a specific subnet, you can create a `Gateway` with the following annotations:
 
 ```yaml
 spec:
@@ -657,6 +657,7 @@ If you no longer need the resources created in this article, you can delete them
 
 <!---LINKS--->
 [aks-csi-driver]: ./csi-secrets-store-driver.md
+[azure-internal-lb]: ./internal-lb.md
 [istio-deploy-addon]: istio-deploy-addon.md
 [istio-deploy-egress]: istio-deploy-egress.md
 [istio-deploy-ingress]: istio-deploy-ingress.md
@@ -670,7 +671,6 @@ If you no longer need the resources created in this article, you can delete them
 [istio-gateway-manual-deployment]: https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/#manual-deployment
 [istio-gateway-class-cm]: https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/#gatewayclass-defaults
 [istio-tls-termination]: https://istio.io/latest/docs/tasks/traffic-management/ingress/secure-ingress/
-[istio-sni-passthrough]: https://istio.io/latest/docs/tasks/traffic-management/ingress/ingress-sni-passthrough/
 [pdb-troubleshooting]: /troubleshoot/azure/azure-kubernetes/create-upgrade-delete/error-code-poddrainfailure
 [akv-addon]: ./csi-secrets-store-driver.md
 [akv-create]: /cli/azure/keyvault#az-keyvault-create
