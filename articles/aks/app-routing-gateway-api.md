@@ -16,7 +16,7 @@ ms.author: nshankar
 
 The application routing add-on now supports the Kubernetes Gateway API for ingress traffic management. If you are using [managed NGINX][app-routing-nginx] with the legacy Ingress API, we strongly recommend migrating to using the Kubernetes Gateway API implementation. 
 
-The application routing add-on Kubernetes Gateway API implementation deploys an Istio control plane to reconcile Kubernetes Gateway API resources. Unlike the [Istio service mesh add-on for AKS][istio-addon], the Istio control plane deployed via the application routing add-on only monitors Gateway API resources and does not support sidecar injection or other Istio Custom Resource Definitions (CRDs). Additionally, the application routing add-on Istio control plane is not revisioned and is upgraded in-place for both minor and patch version updates. Note that you cannot have both the application routing Kubernetes Gateway API implementaion and the Istio add-on enabled simultaneously on your cluster.
+The application routing add-on Kubernetes Gateway API implementation deploys an Istio control plane to reconcile Kubernetes Gateway API resources. Unlike the [Istio service mesh add-on for AKS][istio-addon], the application routing add-on's Istio control plane does not support sidecar injection or other Istio Custom Resource Definitions (CRDs). Additionally, the application routing add-on's Istio control plane is not revisioned and is upgraded in-place for both minor and patch version updates. Note that you cannot have both the application routing Kubernetes Gateway API implementation and the Istio add-on enabled simultaneously on your cluster.
 
 ## Limitations
 
