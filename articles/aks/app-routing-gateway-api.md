@@ -16,8 +16,9 @@ ms.author: nshankar
 
 The application routing add-on now supports the Kubernetes Gateway API for ingress traffic management. If you are using [managed NGINX][app-routing-nginx] with the legacy Ingress API, migrating to using the Kubernetes Gateway API implementation is strongly recommended.
 
-The application routing add-on Kubernetes Gateway API implementation deploys an Istio control plane to reconcile Kubernetes Gateway API resources. However, it differs from the [Istio service mesh add-on for AKS][istio-addon] in the following ways:
-* The application routing add-on's Istio control plane does not support sidecar injection or other Istio Custom Resource Definitions (CRDs). It only reconciles Gateway API resources.
+The application routing add-on Kubernetes Gateway API implementation deploys an Istio control plane to manage infrastructure for Kubernetes Gateway API resources. However, it differs from the [Istio service mesh add-on for AKS][istio-addon] in the following ways:
+* The application routing add-on manages infrastructure for `Gateways` with `gatewayClassName` of `approuting-istio`, whereas the Istio add-on manages infrastructure for `Gateways` with `gatewayClassName` of `istio`.
+* The application routing add-on's Istio control plane does not support sidecar injection or other Istio Custom Resource Definitions (CRDs). It only manages infrastructure for Kubernetes Gateway API resources.
 * The application routing add-on's Istio control plane is not [revisioned][istio-revisions] and is upgraded in-place for both minor and patch version updates.
 
 ## Limitations
@@ -94,7 +95,7 @@ kubectl apply -f https://raw.githubusercontent.com/istio/istio/$ISTIO_RELEASE/sa
 
 ### Create Kubernetes Gateway and HTTPRoute
 
-Next, deploy a Gateway API configuration in the `default` namespace with the `gatewayClassName` set to `istio`. 
+Next, deploy a Gateway API configuration in the `default` namespace with the `gatewayClassName` set to `approuting-istio`. 
 
 ```bash
 kubectl apply -f - <<EOF
@@ -103,7 +104,7 @@ kind: Gateway
 metadata:
   name: httpbin-gateway
 spec:
-  gatewayClassName: istio
+  gatewayClassName: approuting-istio
   listeners:
   - name: http
     port: 80
@@ -134,42 +135,45 @@ EOF
 > [!NOTE]
 > The example above creates an external ingress load balancer service that's accessible from outside the cluster. You can add [annotations][annotation-customizations] to create an [internal load balancer][azure-internal-lb] and customize other load balancer settings.
 
+> [!NOTE]
+> By default, the Istio control plane will append the `GatewayClass` name `approuting-istio` to the name of the resources that it provisions for the `Gateway`. You can annotate your `Gateway` resource with `gateway.istio.io/name-override` to override the name of the provisioned resources. The resource names must be less than `63` characters and must be a valid DNS name.
+
 Verify that a `Deployment`, `Service`, `HorizontalPodAutoscaler`, and `PodDisruptionBudget` get created for `httpbin-gateway`:
 
 ```bash
-kubectl get deployment httpbin-gateway-istio
+kubectl get deployment httpbin-gateway-approuting-istio
 ```
 
 ```output
-NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
-httpbin-gateway-istio   2/2     2            2           6m41s
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+httpbin-gateway-approuting-istio   2/2     2            2           6m41s
 ```
 
 ```bash
-kubectl get service httpbin-gateway-istio
+kubectl get service httpbin-gateway-approuting-istio
 ```
 
 ```output
-NAME                    TYPE           CLUSTER-IP   EXTERNAL-IP      PORT(S)                        AGE
-httpbin-gateway-istio   LoadBalancer   10.0.54.96   <external-ip>    15021:30580/TCP,80:32693/TCP   7m13s
+NAME                               TYPE           CLUSTER-IP   EXTERNAL-IP      PORT(S)                        AGE
+httpbin-gateway-approuting-istio   LoadBalancer   10.0.54.96   <external-ip>    15021:30580/TCP,80:32693/TCP   7m13s
 ```
 
 ```bash
-kubectl get hpa httpbin-gateway-istio
+kubectl get hpa httpbin-gateway-approuting-istio
 ```
 
 ```output
-NAME                    REFERENCE                          TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
-httpbin-gateway-istio   Deployment/httpbin-gateway-istio   cpu: 3%/80%   2         5         2          8m13s
+NAME                               REFERENCE                          TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+httpbin-gateway-approuting-istio   Deployment/httpbin-gateway-istio   cpu: 3%/80%   2         5         2          8m13s
 ```
 
 ```bash
-kubectl get pdb httpbin-gateway-istio
+kubectl get pdb httpbin-gateway-approuting-istio
 ```
 
 ```output
-NAME                    MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
-httpbin-gateway-istio   1               N/A               1                     9m1s
+NAME                               MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+httpbin-gateway-approuting-istio   1               N/A               1                     9m1s
 ```
 
 ### Send request to sample application
@@ -379,7 +383,7 @@ openssl x509 -req -sha256 -days 365 -CA httpbin_certs/example.com.crt -CAkey htt
     metadata:
       name: httpbin-gateway
     spec:
-      gatewayClassName: istio
+      gatewayClassName: approuting-istio
       listeners:
       - name: https
         hostname: "httpbin.example.com"
@@ -467,6 +471,10 @@ It's possible that traffic disruptions could occur during the upgrade process. T
 
 The application routing Gateway API implementation supports customization of the `Gateway` resources via annotations and ConfigMaps. Application routing uses the same resource customization allowlist as the Istio service mesh add-on for Gateway API resource customization. Follow the steps in the [Istio add-on Gateway API docs][istio-gateway-resource-customization] to configure resources generated for the `Gateways` and to see which fields fall under the [allowlist][resource-customization-allowlist].
 
+## MeshConfig customizations
+
+The application routing Gateway API implementation supports configuration of the Istio control plane and gateway proxies through the Istio MeshConfig. Application routing uses the same [MeshConfig allowlist][istio-meshconfig] as the Istio add-on for [`allowed`, `supported`, and `disallowed` fields][istio-support-policy]. However, because the Istio control plane for application routing is not revisioned, the name of the `ConfigMap` for the MeshConfig should just be `istio-shared-configmap`.
+
 ## Disable the application routing Gateway API implementation
 
 Run the following command to disable the application routing Gateway API implementation:
@@ -512,6 +520,8 @@ kubectl delete secretproviderclass httpbin-credential-spc
 [resource-customization-allowlist]: istio-gateway-api.md#resource-customization-allowlist
 [managed-gateway-api]: managed-gateway-api.md
 [istio-release-calendar]: istio-support-policy.md#service-mesh-add-on-release-calendar
+[istio-meshconfig]: istio-meshconfig.md#allowed-supported-and-blocked-meshconfig-values
+[istio-support-policy]: istio-support-policy.md#allowed-supported-and-blocked-customizations
 
 <!-- LINKS - external -->
 [aks-release-notes]: https://github.com/azure/aks/releases

@@ -18,8 +18,10 @@ The Istio service mesh add-on supports both [Istio's own ingress traffic managem
 
 ## Limitations and considerations
 
-- Using the Kubernetes Gateway API for [egress traffic management][istio-deploy-egress] with the Istio service mesh add-on is only supported for the [manual deployment model][istio-gateway-manual-deployment].
-- ConfigMap customizations for `Gateway` resources must fall within the Resource customization allow list. Fields not on the allow list are disallowed and blocked via add-on managed webhooks. For more information, see the [Istio service mesh add-on support policy][istio-support-policy].
+* The Istio service mesh add-on and the [application routing Gateway API implementation][app-routing-gateway-api] cannot be enabled simultaneously. You must disable one first and enable the other in a separate operation.
+* Using the Kubernetes Gateway API for [egress traffic management][istio-deploy-egress] with the Istio add-on is only supported for the [manual deployment model][istio-gateway-manual-deployment].
+* ConfigMap customizations for `Gateway` resources must fall within the [resource customization allowlist](#resource-customization-allowlist). Fields not on the allowlist are disallowed and blocked via add-on managed webhooks. See the [Istio add-on support policy][istio-support-policy] for more information `allowed`, `blocked`, and `supported` features.
+* Configuring HTTPS ingress access to HTTPS services - i.e Server Name Indication (SNI) Passthrough - via the `TLSRoute` resource is currently unsupported.
 
 ## Prerequisites
 
@@ -49,7 +51,11 @@ Set the following environment variables to use throughout this article:
 
 The example manifest creates an external ingress load balancer service that's accessible from outside the cluster. You can add [annotations][annotation-customizations] to create an internal load balancer and customize other load balancer settings.
 
-- Deploy a Gateway API configuration in the `default` namespace with the `gatewayClassName` set to `istio` and an `HTTPRoute` that routes traffic to the `httpbin` service using the following manifest:
+> [!NOTE]
+> By default, the Istio control plane will append the `GatewayClass` name `istio` to the name of the resources that it provisions for the `Gateway`. You can annotate your `Gateway` resource with `gateway.istio.io/name-override` to override the name of the provisioned resources. The resource names must be less than `63` characters and must be a valid DNS name.
+
+> [!NOTE]
+> If you are performing a [minor revision upgrade][istio-upgrade] and have two Istio add-on revisions installed on your cluster simultaneously, by default the control plane for the higher minor revision takes ownership of the `Gateways`. You can add the `istio.io/rev` label to the `Gateway` to control which control plane revision owns it. If you add the revision label, make sure that you update it accordingly to the appropriate control plane revision before rolling back or completing the upgrade operation.
 
     ```bash
     kubectl apply -f - <<EOF
@@ -656,6 +662,7 @@ If you no longer need the resources created in this article, you can delete them
 - [Deploy egress gateways for the Istio service mesh add-on][istio-deploy-egress]
 
 <!---LINKS--->
+[app-routing-gateway-api]: app-routing-gateway-api.md
 [aks-csi-driver]: ./csi-secrets-store-driver.md
 [azure-internal-lb]: ./internal-lb.md
 [istio-deploy-addon]: istio-deploy-addon.md

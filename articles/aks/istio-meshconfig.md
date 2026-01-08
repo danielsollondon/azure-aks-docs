@@ -58,6 +58,9 @@ This guide assumes you followed the [documentation][istio-deploy-add-on] to enab
 
 2. Create a ConfigMap with the name `istio-shared-configmap-<asm-revision>` in the `aks-istio-system` namespace. For example, if your cluster is running asm-1-24 revision of mesh, then the ConfigMap needs to be named as `istio-shared-configmap-asm-1-24`. Mesh configuration has to be provided within the data section under mesh.
 
+    > [!NOTE]
+    > If you are customizing the MeshConfig for the [application routing Gateway API implementation][app-routing-istio-meshconfig], which does not use a revision for the Istio control plane, then you should not append the revision to the ConfigMap name, which is just `istio-shared-configmap`.
+
     Example:
 
     ```bash
@@ -182,6 +185,7 @@ Fields present in [open source MeshConfig reference documentation](https://istio
 - [Pod and sidecar race conditions][istio-sidecar-race-condition] in which the application starts before Envoy can be mitigated using the `holdApplicationUntilProxyStarts` field in the MeshConfig.
 
 [istio-meshconfig]: https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/
+[app-routing-istio-meshconfig]: app-routing-gateway-api.md#meshconfig-customizations
 [istio-sidecar-race-condition]: https://istio.io/latest/docs/ops/common-problems/injection/#pod-or-containers-start-with-network-issues-if-istio-proxy-is-not-ready
 [istio-deploy-add-on]: istio-deploy-addon.md
 [container-insights-docs]: /azure/azure-monitor/containers/container-insights-overview
