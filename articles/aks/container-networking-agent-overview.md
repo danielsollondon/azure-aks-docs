@@ -327,8 +327,6 @@ If you encounter a problem with Container Networking Agent:
 
 ## Next steps
 
-- **Get started** — [Quickstart: Deploy Container Networking Agent](./how-to-configure-container-networking-agent.md)
-- **Learn about permissions** — [RBAC configuration](../helm/container-networking-agent/README-RBAC.md)
-- **Deploy as AKS extension** — [Extension deployment guide](../deployment/EXTENSIONS.md)
-- **Review conversation limits** — [Chat history and conversation limits](./CONVERSATION_LIMITS.md)
-- **Explore rate limiting** — [Rate limiter design](./RateLimiter.md)
+- [Quickstart: Deploy Container Networking Agent](./how-to-configure-container-networking-agent.md)
+- [Advanced Container Networking Services overview](/azure/aks/advanced-container-networking-services-overview)
+- [Azure CNI powered by Cilium](/azure/aks/azure-cni-powered-by-cilium)
