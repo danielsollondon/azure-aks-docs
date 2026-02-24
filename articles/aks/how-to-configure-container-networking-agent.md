@@ -1,8 +1,8 @@
 ---
 title: Deploy and use Container Networking Agent on AKS
 description: Learn how to deploy Container Networking Agent as an AKS extension to troubleshoot networking issues in Azure Kubernetes Service (AKS) clusters.
-author: shaifaligargmsft
-ms.author: shaifaligarg
+author: azure-networking
+ms.author: azure-networking
 ms.date: 02/23/2026
 ms.topic: how-to
 ms.service: azure-kubernetes-service
@@ -12,7 +12,7 @@ ms.service: azure-kubernetes-service
 
 In this article, you learn how to deploy Container Networking Agent on your Azure Kubernetes Service (AKS) cluster, configure authentication and identity, and use the agent to troubleshoot networking issues.
 
-Container Networking Agent is an AI-powered diagnostic assistant that runs as an in-cluster web application. You describe networking problems in natural language, and the agent runs diagnostic commands (`kubectl`, `cilium`, `hubble`) against your cluster and returns structured, evidence-backed reports with root cause analysis and remediation guidance.
+Container Networking Agent is an AI-powered diagnostic assistant that runs as an in-cluster web application. You describe networking problems in natural language, and the agent runs diagnostic commands (`kubectl`, `cilium`, `hubble`) against your cluster. It returns structured, evidence-backed reports with root cause analysis and remediation guidance.
 
 Container Networking Agent helps you troubleshoot:
 
@@ -23,13 +23,13 @@ Container Networking Agent helps you troubleshoot:
 
 Container Networking Agent operates with read-only access to your cluster. It doesn't modify running workloads, configurations, or network policies. Remediation guidance is advisory only.
 
-Container Networking Agent is deployed as an AKS extension (`microsoft.retinaagent`). It integrates with the Azure resource management plane and is managed through the `az k8s-extension` CLI commands.
+You deploy Container Networking Agent as an AKS extension (`microsoft.retinaagent`). It integrates with the Azure resource management plane, and you manage it through the `az k8s-extension` CLI commands.
 
 **Supported regions:** centralus, eastus, eastus2euap, centralusueap, eastus2, uksouth, westus2.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following tools, permissions, and information available.
+Before you begin, ensure you have the following tools, permissions, and information.
 
 ### Tools required
 
@@ -54,17 +54,17 @@ Before you begin, ensure you have the following tools, permissions, and informat
 | Azure Subscription ID | Your target subscription. |
 | Resource group name | Existing or to be created during deployment. |
 | Azure region | A [supported region](#supported-regions): centralus, eastus, eastus2euap, centralusueap, eastus2, uksouth, westus2. |
-| AKS cluster name | Will be created or use an existing cluster. |
+| AKS cluster name | Create a new cluster or use an existing one. |
 | `SERVICE_MANAGEMENT_REFERENCE` | Service management reference (for example, a Service Tree ID) required by your tenant for App Registration setup (Step 7). To find this value for an existing app, run: `az ad app show --id <app-id> --query serviceManagementReference -o tsv`. |
 
 ### Cluster requirements
 
 - An active Azure subscription. If you don't have one, create a [free account](https://azure.microsoft.com/free/) before you begin.
-- An AKS cluster with [workload identity](/azure/aks/workload-identity-overview) and [OIDC issuer](/azure/aks/use-oidc-issuer) enabled, running a [supported Kubernetes version](/azure/aks/supported-kubernetes-versions). A new cluster is created in [Step 2](#step-2-create-an-aks-cluster) if needed.
+- An AKS cluster with [workload identity](/azure/aks/workload-identity-overview) and [OIDC issuer](/azure/aks/use-oidc-issuer) enabled, running a [supported Kubernetes version](/azure/aks/supported-kubernetes-versions). You create a new cluster in [Step 2](#step-2-create-an-aks-cluster) if needed.
 - (Recommended) [Azure CNI powered by Cilium](/azure/aks/azure-cni-powered-by-cilium) with [Advanced Container Networking Services (ACNS)](/azure/aks/advanced-container-networking-services-overview) enabled, for full diagnostic capabilities including Hubble flow analysis and Cilium policy diagnostics.
 - Minimum node size: `Standard_D4_v3` or equivalent (three nodes recommended).
-- An [Azure OpenAI](/azure/ai-services/openai/) resource with a deployed model (for example, GPT-4o or later). Created in [Step 3](#step-3-create-an-azure-openai-resource-and-deploy-a-model) if needed.
-- The AKS cluster must have outbound connectivity to the Azure OpenAI endpoint over HTTPS (port 443).
+- An [Azure OpenAI](/azure/ai-services/openai/) resource with a deployed model (for example, GPT-4o or later). You create this resource in [Step 3](#step-3-create-an-azure-openai-resource-and-deploy-a-model) if needed.
+- The AKS cluster requires outbound connectivity to the Azure OpenAI endpoint over HTTPS (port 443).
 - The cluster must be able to pull container images from `acnpublic.azurecr.io`.
 
 > [!TIP]
@@ -96,7 +96,7 @@ az group create \
 
 ### Step 2: Create an AKS cluster
 
-If you don't already have an AKS cluster, create one with workload identity, OIDC issuer, Azure CNI with Cilium dataplane, and Advanced Container Networking Services (ACNS) enabled using the [`az aks create`](/cli/azure/aks#az-aks-create) command.
+If you don't already have an AKS cluster, create one with workload identity, OIDC issuer, Azure CNI with Cilium dataplane, and Advanced Container Networking Services (ACNS) enabled. Use the [`az aks create`](/cli/azure/aks#az-aks-create) command.
 
 ```azurecli-interactive
 az aks create \
@@ -775,7 +775,7 @@ main "$@"
 
 #### [Portal - Use the Azure portal UI](#tab/step3-portal)
 
-You can create an Azure OpenAI resource and deploy a model directly from the Azure portal.
+Create an Azure OpenAI resource and deploy a model directly from the Azure portal.
 
 Follow the step-by-step guide on Microsoft Learn:
 
@@ -2566,7 +2566,7 @@ Verify the agent pods are running:
 kubectl get pods -n kube-system | grep container-networking-agent
 ```
 
-You should see one or more pods in `Running` status.
+Verify that one or more pods show `Running` status.
 
 ### Step 10: Access the agent
 
@@ -2638,7 +2638,7 @@ az k8s-extension show \
     --query "{provisioningState:provisioningState, version:version}" -o table
 ```
 
-The `provisioningState` should show `Succeeded` with Version number.
+The `provisioningState` value should show `Succeeded` with a version number.
 
 ### Verify service account
 
@@ -2652,7 +2652,7 @@ The annotation `azure.workload.identity/client-id` should match your managed ide
 
 ## Use Container Networking Agent
 
-After deployment and validation, you can access the agent through the web chat interface.
+After deployment and validation, access the agent through the web chat interface.
 
 ### Access the chat interface
 
@@ -2688,7 +2688,7 @@ Type a question or describe a networking problem in the chat input. The agent fo
 
 ### Diagnostic workflows
 
-- **DNS troubleshooting**: The agent checks CoreDNS pod health, service endpoints, CoreDNS configuration (including custom ConfigMaps), NodeLocal DNS status, DNS resolution from multiple paths, and network policies that might block DNS traffic.
+- **DNS troubleshooting**: The agent checks CoreDNS pod health, service endpoints, and CoreDNS configuration (including custom ConfigMaps). It also checks NodeLocal DNS status, DNS resolution from multiple paths, and network policies that might block DNS traffic.
 - **Packet drop analysis**: The agent deploys a lightweight debug DaemonSet to collect host-level network statistics. It examines NIC ring buffer utilization, kernel softnet statistics, per-CPU SoftIRQ distribution, socket buffer saturation, and network interface statistics. Delta measurements detect active drops versus historical counters.
 - **Kubernetes networking diagnostics**: The agent examines pod status and scheduling, service configuration and endpoint registration, network policies (both Kubernetes and Cilium), Hubble flows, and service-to-pod port mapping.
 
@@ -2716,19 +2716,19 @@ Start a new conversation for unrelated issues to keep context fresh.
 
 ## Cluster access and security
 
-Container Networking Agent uses a dedicated service account (`container-networking-agent-reader`) with a read-only ClusterRole in the `kube-system` namespace. The RBAC configuration follows the principle of least privilege:
+Container Networking Agent uses a dedicated service account (`container-networking-agent-reader`) with a read-only ClusterRole in the `kube-system` namespace. The RBAC configuration uses the principle of least privilege:
 
 - **Read access** to core Kubernetes resources: Pods, Services, Nodes, Namespaces, ConfigMaps, Events, Deployments, ReplicaSets, DaemonSets, StatefulSets, Ingresses, NetworkPolicies, Endpoints, EndpointSlices, PersistentVolumes, and PersistentVolumeClaims.
 - **Read access** to Cilium CRDs: CiliumNetworkPolicies, CiliumEndpoints, CiliumIdentities, CiliumLoadBalancerIPPools, CiliumL2AnnouncementPolicies, and other Cilium resources.
 - **Read access** to metrics: Node and Pod metrics via metrics-server.
-- **Limited exec access**: `pods/exec` is permitted only for diagnostic commands (Cilium status and endpoint information).
+- **Limited exec access**: The agent uses `pods/exec` only for diagnostic commands (Cilium status and endpoint information).
 - **No write access**: The agent can't create, update, or delete any cluster resource.
 
 The agent pod makes outbound HTTPS calls to your Azure OpenAI endpoint. If you use egress restrictions (network policies, Azure Firewall, or NSGs), allow outbound traffic from the `kube-system` namespace to your Azure OpenAI endpoint on port 443.
 
 For packet drop diagnostics, the agent deploys a lightweight debug DaemonSet (`retina-debug-daemonset`) in `kube-system` that requires `hostNetwork` and `NET_ADMIN` capabilities. This DaemonSet is shared across diagnostic sessions and cleaned up automatically.
 
-The agent doesn't persist diagnostic data externally. Session data (chat history, agent assignments) is stored in-memory within the pod and is lost if the pod restarts.
+The agent doesn't persist diagnostic data externally. The pod stores session data (chat history, agent assignments) in memory, and this data is lost if the pod restarts.
 
 ## Manage the extension
 
@@ -2834,7 +2834,7 @@ az k8s-extension delete \
 
 **Symptom:** The agent pod is running but can't connect to Azure OpenAI. Logs show connection timeouts or SSL errors.
 
-**Cause:** Network policies, Azure Firewall rules, or NSG rules are blocking outbound traffic from the `kube-system` namespace.
+**Cause:** Network policies, Azure Firewall rules, or NSG rules block outbound traffic from the `kube-system` namespace.
 
 **Resolution:**
 
@@ -2880,7 +2880,7 @@ az k8s-extension delete \
 
 ### Hubble commands fail
 
-**Symptom:** The agent reports errors when running Hubble-related diagnostics, or Hubble flow analysis is unavailable.
+**Symptom:** The agent reports errors when running Hubble-related diagnostics, or Hubble flow analysis isn't available.
 
 **Cause:** The cluster doesn't have ACNS enabled, or the Cilium dataplane isn't configured.
 
@@ -2908,3 +2908,4 @@ kubectl delete ds retina-debug-daemonset -n kube-system
 - [Container Networking Agent overview](./container-networking-agent-overview.md)
 - [RBAC configuration for Container Networking Agent](../helm/container-networking-agent/README-RBAC.md)
 - [Conversation limits](./CONVERSATION_LIMITS.md)
+- [Agent architecture design](./AGENT_ARCHITECTURE_DESIGN.md)

@@ -10,18 +10,16 @@ ms.service: azure-kubernetes-service
 
 # What is Container Networking Agent for AKS?
 
-Container Networking Agent is an AI-powered diagnostic assistant that helps you identify and resolve networking issues in your Azure Kubernetes Service (AKS) clusters. Once deployed, it runs as an in-cluster web application that you access through your browser. You type questions or describe networking problems in natural language — just as you would in any chat conversation — and the agent runs real diagnostic commands against your cluster and returns a structured, evidence-backed report with root cause analysis and remediation guidance.
+Container Networking Agent is an AI-powered diagnostic assistant that helps you identify and resolve networking issues in your Azure Kubernetes Service (AKS) clusters. After you deploy it, the agent runs as an in-cluster web application that you access through your browser. Describe networking problems in natural language, and the agent runs diagnostic commands against your cluster. It returns a structured, evidence-backed report with root cause analysis and remediation guidance.
 
-After you deploy it, the agent runs as an in-cluster web application. Open it in your browser, describe a networking problem in plain language, and the agent runs diagnostic commands against your cluster. It then returns a structured report with root cause analysis and steps to fix the issue.
-
-Container Networking Agent doesn't modify your cluster. It operates with read-only access, so you can safely run diagnostics without risk to running workloads.
+Container Networking Agent operates with read-only access and doesn't modify your cluster. You can safely run diagnostics without risk to running workloads.
 
 > [!NOTE]
 > Container Networking Agent is also referred to internally as **CNA**. You may see this abbreviation in Azure portal experiences and CLI output.
 
 ## What can you do with Container Networking Agent?
 
-Container Networking Agent helps you troubleshoot the most common — and most time-consuming — categories of AKS networking issues:
+Container Networking Agent helps you troubleshoot the most common and most time-consuming categories of AKS networking issues:
 
 | Capability | What it does |
 |-----------|-------------|
@@ -50,7 +48,7 @@ Each diagnostic produces a structured report that includes what was checked, wha
 - RBAC configuration, secrets management, or security auditing (except network policies)
 - Workload scheduling, resource optimization, or cost management
 - Non-Azure cloud environments (AWS, GCP)
-- Making changes to your cluster — all access is read-only
+- Making changes to your cluster. All access is read-only.
 
 ## How it works
 
@@ -62,9 +60,9 @@ You describe the issue → Agent classifies it → Collects evidence from the cl
 
 **1. Classify** — The agent determines the issue category (DNS, connectivity, network policy, service routing, or packet drops) based on your description.
 
-**2. Collect evidence** — The agent runs the appropriate diagnostic commands against your cluster using `kubectl`, `cilium`, and `hubble` through a read-only interface. Each diagnostic category has a purpose-built evidence collection workflow that gathers the right data automatically.
+**2. Collect evidence** — The agent runs diagnostic commands against your cluster using `kubectl`, `cilium`, and `hubble` through a read-only interface. Each diagnostic category uses a dedicated evidence collection workflow to gather the right data automatically.
 
-**3. Analyze** — The agent examines collected evidence to separate healthy signals from anomalies. It follows a strict evidence-first standard: conclusions are based only on what the commands actually returned, never on speculation.
+**3. Analyze** — The agent examines collected evidence to separate healthy signals from anomalies. The agent bases all conclusions on actual command output, never on speculation.
 
 **4. Report** — You receive a structured report that includes:
 - A summary of the issue and its status
@@ -86,7 +84,7 @@ Container Networking Agent works with the AKS networking tools you already use:
 | **Azure OpenAI** | Powers the conversational AI that interprets your questions and generates diagnostic reports |
 
 > [!TIP]
-> For the full diagnostic feature set — including Hubble flow analysis and Cilium policy diagnostics — deploy Container Networking Agent on an AKS cluster with [Azure CNI powered by Cilium](/azure/aks/azure-cni-powered-by-cilium) and [Advanced Container Networking Services (ACNS)](/azure/aks/advanced-container-networking-services-overview) enabled.
+> For the full diagnostic feature set, including Hubble flow analysis and Cilium policy diagnostics, deploy Container Networking Agent on an AKS cluster with [Azure CNI powered by Cilium](/azure/aks/azure-cni-powered-by-cilium) and [Advanced Container Networking Services (ACNS)](/azure/aks/advanced-container-networking-services-overview) enabled.
 
 ## Safety model and limitations
 
@@ -94,24 +92,24 @@ Container Networking Agent works with the AKS networking tools you already use:
 
 Container Networking Agent operates with a dedicated Kubernetes service account (`container-networking-agent-reader`) that has **read-only** permissions:
 
-- Cannot create, update, or delete any cluster resource
-- Cannot modify running workloads, configurations, or network policies
-- Limited `pods/exec` access only for diagnostic commands (Cilium status and endpoint information)
-- All API calls are logged by the Kubernetes audit system
+- Can't create, update, or delete any cluster resource
+- Can't modify running workloads, configurations, or network policies
+- Has limited `pods/exec` access only for diagnostic commands (Cilium status and endpoint information)
+- Logs all API calls through the Kubernetes audit system
 
-Remediation guidance is always **advisory** — the agent tells you what commands to run, but it never runs them for you.
+Remediation guidance is always **advisory**. The agent tells you what commands to run, but never runs them for you.
 
 ### Scope restrictions
 
-The agent responds only to networking and Kubernetes-related questions. Off-topic requests are politely declined. The system also includes prompt injection defenses to prevent misuse.
+The agent responds only to networking and Kubernetes-related questions and politely declines off-topic requests. The system also includes prompt injection defenses to prevent misuse.
 
 ### Session and conversation limits
 
 | Limit | Default | Notes |
 |-------|---------|-------|
-| Chat context window | ~15 exchanges | Older messages are dropped from the agent's working context. Start a new conversation for unrelated issues. |
-| Messages per conversation | 100 | Older messages are automatically removed when this limit is reached |
-| Conversations per user | 20 | Least-recently-used conversations are cleaned up at 90% capacity |
+| Chat context window | ~15 exchanges | The agent drops older messages from the working context. Start a new conversation for unrelated issues. |
+| Messages per conversation | 100 | The agent automatically removes older messages when reaching this limit |
+| Conversations per user | 20 | The system cleans up least-recently-used conversations at 90% capacity |
 | Session idle timeout | 30 minutes | Sessions expire after 30 minutes of inactivity |
 | Session absolute timeout | 8 hours | Sessions expire after 8 hours regardless of activity |
 
@@ -150,7 +148,7 @@ DNS resolution failures are one of the most common networking issues in Kubernet
 - DNS works for some pods but not others
 - External domain resolution fails while internal resolution works (or vice versa)
 
-**Sample prompts you can try:**
+**Sample prompts:**
 
 | What you're seeing | Prompt |
 |-------------------|--------|
@@ -163,7 +161,7 @@ DNS resolution failures are one of the most common networking issues in Kubernet
 
 **What the agent checks:**
 
-The DNS diagnostic covers CoreDNS pod health, service endpoints, CoreDNS configuration (including custom ConfigMaps), NodeLocal DNS status, DNS resolution tests across multiple paths (same-namespace, cross-namespace, FQDN, external), CoreDNS Prometheus metrics, and network policy analysis — including Cilium toFQDN egress policies that may silently restrict external domain resolution.
+The DNS diagnostic checks CoreDNS pod health, service endpoints, and CoreDNS configuration, including custom ConfigMaps. It also tests DNS resolution across multiple paths: same-namespace, cross-namespace, FQDN, and external. The agent evaluates CoreDNS Prometheus metrics and network policy rules, including Cilium toFQDN egress policies that might silently restrict external domain resolution.
 
 **Example root causes the agent identifies:**
 
@@ -176,7 +174,7 @@ The DNS diagnostic covers CoreDNS pod health, service endpoints, CoreDNS configu
 
 ### RX / Packet drop troubleshooting
 
-Packet drops are notoriously difficult to diagnose because they can occur at multiple layers — NIC hardware, kernel networking stack, or application socket buffers. Container Networking Agent deploys a lightweight debug pod to each node to collect host-level network statistics, then uses delta measurements to identify where packets are being lost.
+Packet drops are difficult to diagnose because they can occur at multiple layers: NIC hardware, the kernel networking stack, or application socket buffers. Container Networking Agent deploys a lightweight debug pod to each node to collect host-level network statistics. It then uses delta measurements to identify where packets are lost.
 
 **Common situations:**
 
@@ -186,7 +184,7 @@ Packet drops are notoriously difficult to diagnose because they can occur at mul
 - High CPU usage correlated with network processing
 - `ethtool -S` shows incrementing RX drop counters
 
-**Sample prompts you can try:**
+**Sample prompts:**
 
 | What you're seeing | Prompt |
 |-------------------|--------|
@@ -198,22 +196,22 @@ Packet drops are notoriously difficult to diagnose because they can occur at mul
 
 **What the agent checks:**
 
-The packet drop diagnostic examines NIC ring buffer utilization 〈`ethtool`〉, kernel softnet statistics (`/proc/net/softnet_stat`), per-CPU SoftIRQ distribution, socket buffer saturation, network interface statistics (`/proc/net/dev`), kernel buffer tunables (`tcp_rmem`, `rmem_max`, `netdev_max_backlog`), RPS/XPS/RFS configuration, and CNI-specific interface analysis. Delta measurements (before-and-after snapshots) are used to detect active drops versus historical counters.
+The packet drop diagnostic examines NIC ring buffer utilization (`ethtool`), kernel softnet statistics (`/proc/net/softnet_stat`), per-CPU SoftIRQ distribution, and socket buffer saturation. It also reviews network interface statistics (`/proc/net/dev`), kernel buffer tunables (`tcp_rmem`, `rmem_max`, `netdev_max_backlog`), RPS/XPS/RFS configuration, and CNI-specific interface analysis. The agent uses delta measurements (before-and-after snapshots) to detect active drops versus historical counters.
 
 **Example root causes the agent identifies:**
 
-- NIC ring buffer exhaustion — active `rx_dropped` counters incrementing
-- Kernel packet drops — non-zero values in `/proc/net/softnet_stat` drop column
-- Socket buffer overflow — socket receive queue growing beyond buffer limits
-- SoftIRQ CPU bottleneck — high `%soft` on a single CPU with imbalanced interrupt distribution
-- All checks passing — agent reports "No issue detected" rather than guessing
+- NIC ring buffer exhaustion: active `rx_dropped` counters incrementing
+- Kernel packet drops: non-zero values in `/proc/net/softnet_stat` drop column
+- Socket buffer overflow: socket receive queue growing beyond buffer limits
+- SoftIRQ CPU bottleneck: high `%soft` on a single CPU with imbalanced interrupt distribution
+- All checks passing: agent reports "No issue detected" rather than guessing
 
 > [!IMPORTANT]
 > The packet drop diagnostic deploys a debug DaemonSet (`retina-debug-daemonset`) to your cluster's `kube-system` namespace. This DaemonSet requires `hostNetwork` and `NET_ADMIN` capabilities to access host-level network data. It's shared across diagnostic sessions and cleaned up automatically, but may persist if the agent pod crashes unexpectedly. See [Known issues](#known-issues-and-product-limitations) for cleanup guidance.
 
 ### Kubernetes networking troubleshooting
 
-When pods can't communicate with services, network policies block expected traffic, or services have no endpoints, Container Networking Agent investigates the full networking path — from pod scheduling and readiness, through service endpoint registration, to network policy evaluation and Hubble flow observation.
+When pods can't communicate with services, network policies block expected traffic, or services have no endpoints, Container Networking Agent investigates the full networking path. The agent checks pod scheduling and readiness, service endpoint registration, network policy evaluation, and Hubble flow observation.
 
 **Common situations:**
 
@@ -223,7 +221,7 @@ When pods can't communicate with services, network policies block expected traff
 - Service endpoints exist but connections still time out
 - Hubble shows `DROPPED` verdict on flows between pods
 
-**Sample prompts you can try:**
+**Sample prompts:**
 
 | What you're seeing | Prompt |
 |-------------------|--------|
@@ -236,7 +234,7 @@ When pods can't communicate with services, network policies block expected traff
 
 **What the agent checks:**
 
-The Kubernetes networking diagnostic examines pod status and scheduling, service configuration and endpoint registration, network policies (both Kubernetes NetworkPolicy and CiliumNetworkPolicy), Hubble flows (including dropped traffic), and service-to-pod port mapping. A particularly common misconfiguration the agent catches is service `targetPort` not matching pod `containerPort` — which causes connection timeouts even though endpoints appear healthy.
+The Kubernetes networking diagnostic examines pod status and scheduling, service configuration and endpoint registration, and network policies (both Kubernetes NetworkPolicy and CiliumNetworkPolicy). It also analyzes Hubble flows, including dropped traffic, and service-to-pod port mapping. A common misconfiguration the agent catches is a service `targetPort` that doesn't match the pod `containerPort`. This mismatch causes connection timeouts even though endpoints appear healthy.
 
 **Example root causes the agent identifies:**
 
@@ -260,7 +258,7 @@ The Kubernetes networking diagnostic examines pod status and scheduling, service
 | 25 nodes | Up to 3 | Packet drop diagnostics generate per-node evidence bundles |
 | 50 nodes | 1 | Large evidence bundles approach AI model context limits |
 
-The first query from a new user may take longer if the pre-warmed agent pool (default: 3 agents) is exhausted. Subsequent queries from the same session use the already-initialized agent.
+The first query from a new user might take longer if all agents in the pre-warmed pool (default: three agents) are in use. Subsequent queries from the same session use the already-initialized agent.
 
 ### Known issues
 
@@ -282,41 +280,41 @@ When deployed as an AKS extension (`microsoft.retinaagent`), Container Networkin
 
 Container Networking Agent runs as a pod in your AKS cluster. Direct costs include:
 
-- **Azure OpenAI usage** — Token consumption depends on conversation length and diagnostic complexity. See [Azure OpenAI pricing](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/) for current rates.
-- **AKS node compute** — The Container Networking Agent pod and (for packet drop diagnostics) the debug DaemonSet consume cluster compute resources.
+- **Azure OpenAI usage**: Token consumption depends on conversation length and diagnostic complexity. See [Azure OpenAI pricing](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/) for current rates.
+- **AKS node compute**: The Container Networking Agent pod and (for packet drop diagnostics) the debug DaemonSet consume cluster compute resources.
 
 Container Networking Agent itself has no separate licensing fee.
 
 ## Customer experience, support, and feedback
 
-Container Networking Agent is a browser-based chatbot that runs inside your AKS cluster. After deployment, you open the application URL in any modern browser to start a conversation. There's no CLI tool to install on your workstation and no portal blade to navigate — it's a standalone chat interface purpose-built for network diagnostics.
+Container Networking Agent is a browser-based chatbot that runs inside your AKS cluster. After deployment, open the application URL in any modern browser to start a conversation. You don't need a CLI tool on your workstation or a portal blade to navigate. It's a standalone chat interface designed for network diagnostics.
 
 ### Sign up
 
-When you first open the Container Networking Agent URL, you're prompted to sign in. Depending on how your administrator configured the deployment, you sign in with either a simple username (development environments) or your Microsoft Entra ID credentials (production environments).
+When you first open the Container Networking Agent URL, the application prompts you to sign in. Depending on how your administrator configured the deployment, you sign in with either a simple username (development environments) or your Microsoft Entra ID credentials (production environments).
 
 :::image type="content" source="./media/advanced-container-networking-services/container-networking-signup-page.png" alt-text="Screenshot of the Container Networking Agent sign-up page where users enter credentials to access the diagnostic assistant." lightbox="./media/advanced-container-networking-services/container-networking-signup-page.png":::
 
 ### Grant permissions
 
-After signing in, you may be prompted to grant permissions for the application to access your account. Review the requested permissions and select **Accept** to continue.
+After signing in, the application might prompt you to grant permissions. Review the requested permissions and select **Accept** to continue.
 
 :::image type="content" source="./media/advanced-container-networking-services/container-networking-agent-permission-auth-page.png" alt-text="Screenshot of the Container Networking Agent permission authorization page requesting user consent." lightbox="./media/advanced-container-networking-services/container-networking-agent-permission-auth-page.png":::
 
 ### Chat interface
 
-Once authenticated, you land on the chat interface. Your session is maintained server-side — you can close and reopen the browser tab within the session timeout window without losing your conversation.
+After you authenticate, you land on the chat interface. The server maintains your session, so you can close and reopen the browser tab within the session timeout window without losing your conversation.
 
 :::image type="content" source="./media/advanced-container-networking-services/container-networking-agent-homepage.png" alt-text="Screenshot of the Container Networking Agent chat interface showing a user prompt and a structured diagnostic response." lightbox="./media/advanced-container-networking-services/container-networking-agent-homepage.png":::
 
 The chat interface is where you:
 
-- **Ask questions in natural language** — Type prompts like *"Why can't my pod resolve DNS?"* or *"Check packet drops on node aks-nodepool1-vmss000000"*. No special syntax required.
-- **Receive structured diagnostic reports** — Responses include evidence tables, root cause analysis, and copy-pasteable remediation commands.
-- **Start new conversations** — Each conversation maintains its own context. Switch topics by starting a new conversation.
-- **Submit feedback** — After each diagnostic response, use the built-in feedback controls (thumbs up / thumbs down) to rate the quality of the diagnosis. Your feedback helps improve future diagnostic accuracy.
+- **Ask questions in natural language**: Type prompts like *"Why can't my pod resolve DNS?"* or *"Check packet drops on node aks-nodepool1-vmss000000"*. No special syntax is required.
+- **Receive structured diagnostic reports**: Responses include evidence tables, root cause analysis, and copy-pasteable remediation commands.
+- **Start new conversations**: Each conversation maintains its own context. Switch topics by starting a new conversation.
+- **Submit feedback**: After each diagnostic response, use the built-in feedback controls (thumbs up / thumbs down) to rate the quality of the diagnosis. Your feedback helps improve future diagnostic accuracy.
 
-### Reporting issues
+### Report issues
 
 If you encounter a problem with Container Networking Agent:
 
