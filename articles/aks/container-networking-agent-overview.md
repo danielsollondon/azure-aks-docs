@@ -10,9 +10,9 @@ ms.service: azure-kubernetes-service
 
 # What is Container Networking Agent for AKS?
 
-Container Networking Agent is an AI-powered diagnostic assistant that helps you identify and resolve networking issues in your Azure Kubernetes Service (AKS) clusters. After you deploy it, the agent runs as an in-cluster web application that you access through your browser. Describe networking problems in natural language, and the agent runs diagnostic commands against your cluster. It returns a structured, evidence-backed report with root cause analysis and remediation guidance.
+Container Networking Agent is an AI-powered diagnostic assistant that helps you identify and resolve networking issues in your Azure Kubernetes Service (AKS) clusters. Describe a problem in natural language — DNS failures, packet drops, unreachable services, or blocked traffic — and the agent collects evidence from your cluster and returns a structured report with root cause analysis and remediation guidance.
 
-Container Networking Agent operates with read-only access and doesn't modify your cluster. You can safely run diagnostics without risk to running workloads.
+The agent runs as an in-cluster web application that you access through your browser. It operates with read-only access and never modifies your cluster, so you can run diagnostics safely on production workloads.
 
 > [!NOTE]
 > Container Networking Agent is also referred to internally as **CNA**. You may see this abbreviation in Azure portal experiences and CLI output.
@@ -57,6 +57,7 @@ When you describe a networking issue, Container Networking Agent follows a struc
 ```
 You describe the issue → Agent classifies it → Collects evidence from the cluster → Analyzes findings → Reports results
 ```
+:::image type="content" source="./media/advanced-container-networking-services/Conatiner-network-agent-working.png" alt-text="Screenshot of the Container Networking Agent chat interface showing a user prompt and a structured diagnostic response." lightbox="./media/advanced-container-networking-services/Conatiner-network-agent-working.png":::
 
 **1. Classify** — The agent determines the issue category (DNS, connectivity, network policy, service routing, or packet drops) based on your description.
 
@@ -90,11 +91,12 @@ Container Networking Agent works with the AKS networking tools you already use:
 
 ### Read-only access
 
-Container Networking Agent operates with a dedicated Kubernetes service account (`container-networking-agent-reader`) that has **read-only** permissions:
+Container Networking Agent operates with a dedicated Kubernetes service account (`container-networking-agent-reader`) that has **minimal** permissions:
 
-- Can't create, update, or delete any cluster resource
-- Can't modify running workloads, configurations, or network policies
-- Has limited `pods/exec` access only for diagnostic commands (Cilium status and endpoint information)
+- Has **read-only** access to pods, services, endpoints, nodes, namespaces, network policies, Cilium resources, and other Kubernetes objects
+- Has limited **write** access to the `apps` API group (deployments, daemonsets) solely for managing the temporary debug DaemonSet used during packet drop diagnostics
+- Has limited `pods/exec` access for diagnostic commands (Cilium status, endpoint information, and node-level network statistics)
+- Can't modify running workloads, user configurations, or network policies
 - Logs all API calls through the Kubernetes audit system
 
 Remediation guidance is always **advisory**. The agent tells you what commands to run, but never runs them for you.
@@ -116,24 +118,6 @@ The agent responds only to networking and Kubernetes-related questions and polit
 ### Concurrency
 
 Container Networking Agent supports 1–7 concurrent users under typical conditions. Packet drop diagnostics on larger clusters (25+ nodes) may require limiting concurrent users to avoid API server load. For details, see [Scale guidance](#scale-guidance).
-
-## Prerequisites
-
-Before deploying Container Networking Agent, ensure you have:
-
-- An **AKS cluster** with [workload identity](/azure/aks/workload-identity-overview) and [OIDC issuer](/azure/aks/use-oidc-issuer) enabled
-- An **Azure OpenAI** resource with a deployed model (GPT-4.1 or equivalent)
-- A **user-assigned managed identity** with the following role assignments:
-  - `Cognitive Services OpenAI User` on the Azure OpenAI resource
-  - `Azure Kubernetes Service Cluster User Role` on the AKS cluster
-  - `Reader` on the resource group
-- **Federated credentials** linking the managed identity to the Kubernetes service account (`system:serviceaccount:kube-system:container-networking-agent-reader`)
-- (Optional) An **Azure App Registration** for Microsoft Entra ID user authentication
-
-For Cilium and Hubble diagnostics, your cluster should use [Azure CNI powered by Cilium](/azure/aks/azure-cni-powered-by-cilium). Without Cilium, Container Networking Agent still provides DNS, packet drop, and standard Kubernetes networking diagnostics.
-
-> [!div class="nextstepaction"]
-> [Get started with Container Networking Agent](./how-to-configure-container-networking-agent.md)
 
 ## Example scenarios and sample prompts
 
@@ -207,7 +191,7 @@ The packet drop diagnostic examines NIC ring buffer utilization (`ethtool`), ker
 - All checks passing: agent reports "No issue detected" rather than guessing
 
 > [!IMPORTANT]
-> The packet drop diagnostic deploys a debug DaemonSet (`retina-debug-daemonset`) to your cluster's `kube-system` namespace. This DaemonSet requires `hostNetwork` and `NET_ADMIN` capabilities to access host-level network data. It's shared across diagnostic sessions and cleaned up automatically, but may persist if the agent pod crashes unexpectedly. See [Known issues](#known-issues-and-product-limitations) for cleanup guidance.
+> The packet drop diagnostic deploys a debug DaemonSet (`rx-troubleshooting-debug`) to your cluster's `kube-system` namespace. This DaemonSet requires `hostNetwork`, `hostPID`, `hostIPC`, and `NET_ADMIN` capabilities to access host-level network data. It runs as a non-root user with a read-only root filesystem. It's shared across diagnostic sessions and cleaned up automatically, but may persist if the agent pod crashes unexpectedly. See [Known issues](#known-issues-and-product-limitations) for cleanup guidance.
 
 ### Kubernetes networking troubleshooting
 
@@ -264,7 +248,7 @@ The first query from a new user might take longer if all agents in the pre-warme
 
 | Issue | Description | Workaround |
 |-------|-------------|------------|
-| **Debug DaemonSet persists after crash** | If the Container Networking Agent pod crashes during a packet drop diagnostic, the `retina-debug-daemonset` may remain in `kube-system` | Run `kubectl delete ds retina-debug-daemonset -n kube-system` |
+| **Debug DaemonSet persists after crash** | If the Container Networking Agent pod crashes during a packet drop diagnostic, the `rx-troubleshooting-debug` DaemonSet may remain in `kube-system` | Run `kubectl delete ds rx-troubleshooting-debug -n kube-system` |
 | **First packet drop diagnostic is slower** | The debug DaemonSet takes 30–60 seconds to schedule and become ready on first use | Subsequent diagnostics reuse existing pods and are faster |
 | **Non-Cilium clusters have reduced diagnostics** | Cilium policy analysis and Hubble flow observation aren't available | Agent still provides full DNS, packet drop, and standard Kubernetes diagnostics |
 | **Non-ACNS clusters lack Hubble** | `hubble observe` commands fail on clusters without Advanced Container Networking Services | Enable ACNS, or rely on `kubectl`-based diagnostics |
@@ -274,7 +258,7 @@ The first query from a new user might take longer if all agents in the pre-warme
 
 ### Extension availability
 
-When deployed as an AKS extension (`microsoft.retinaagent`), Container Networking Agent is available in: **centralus**, **eastus**, **eastus2euap**, **centralusueap**, **eastus2**, **uksouth**, **westus2**.
+When deployed as an AKS extension (`microsoft.containernetworkingagent`), Container Networking Agent is available in: **centralus**, **eastus**, **eastus2**, **uksouth**, **westus2**.
 
 ## Pricing
 
@@ -299,13 +283,13 @@ When you first open the Container Networking Agent URL, the application prompts 
 
 After signing in, the application might prompt you to grant permissions. Review the requested permissions and select **Accept** to continue.
 
-:::image type="content" source="./media/advanced-container-networking-services/container-networking-agent-permission-auth-page.png" alt-text="Screenshot of the Container Networking Agent permission authorization page requesting user consent." lightbox="./media/advanced-container-networking-services/container-networking-agent-permission-auth-page.png":::
+:::image type="content" source="./media/advanced-container-networking-services/container-networking-agent-permission-page.png" alt-text="Screenshot of the Container Networking Agent permission authorization page requesting user consent." lightbox="./media/advanced-container-networking-services/container-networking-agent-permission-page.png":::
 
 ### Chat interface
 
 After you authenticate, you land on the chat interface. The server maintains your session, so you can close and reopen the browser tab within the session timeout window without losing your conversation.
 
-:::image type="content" source="./media/advanced-container-networking-services/container-networking-agent-homepage.png" alt-text="Screenshot of the Container Networking Agent chat interface showing a user prompt and a structured diagnostic response." lightbox="./media/advanced-container-networking-services/container-networking-agent-homepage.png":::
+:::image type="content" source="./media/advanced-container-networking-services/container-networking-agent-home-page.png" alt-text="Screenshot of the Container Networking Agent chat interface showing a user prompt and a structured diagnostic response." lightbox="./media/advanced-container-networking-services/container-networking-agent-home-page.png":::
 
 The chat interface is where you:
 
