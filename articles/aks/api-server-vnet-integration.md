@@ -1,8 +1,8 @@
 ---
 title: API Server VNet Integration in Azure Kubernetes Service (AKS)
 description: Learn how to create an Azure Kubernetes Service (AKS) cluster with API Server VNet Integration
-author: asudbring
-ms.author: allensu
+author: davidsmatlak
+ms.author: davidsmatlak
 ms.subservice: aks-networking
 ms.topic: how-to
 ms.date: 05/19/2023
@@ -24,23 +24,11 @@ API Server VNet Integration is supported for public or private clusters. You can
 
 - You must have Azure CLI version 2.73.0 or later installed. You can check your version using the `az --version` command.
 
-## Limited availability
+## Limitations
+* API Server VNet Integration does not support [Virtual Network Encryption](/azure/virtual-network/virtual-network-encryption-overview). Clusters deployed on **v3 or earlier AKS node SKUs** (which do not support VNet Encryption) are allowed but traffic will not be encrypted. Clusters deployed on **v4 or later AKS node SKUs** (which support VNet Encryption) are blocked because encrypted VNets are incompatible with API Server VNet Integration. See [AKS supported VM SKUs](quotas-skus-regions.md#supported-vm-sizes) for details.
 
-> [!IMPORTANT]
-> **API Server VNet Integration has limited availability and capacity in certain regions.**  
-> When creating or updating a cluster with API Server VNet Integration enabled, you may receive the following error:
->
-> **`API Server VNet Integration is currently unavailable in region (_region_) due to high demand and limited capacity. AKS is actively expanding support for this feature. Check for other available regions at aka.ms/AksVnetIntegration.`**
->
-> This message indicates that the selected region has temporarily reached capacity for API Server VNet Integration.
->
-> **To proceed**, you can:
-> - Retry your request at a later time, as capacity may become available.
-> - Select an alternate region where this feature is currently supported.
-
-API Server VNet Integration is available in the following regions: 
-
-australiacentral, australiacentral2, australiaeast, australiasoutheast, austriaeast, brazilsouth, brazilsoutheast, canadacentral, canadaeast, centralindia, centralus, centraluseuap, chilecentral, eastasia, eastus, eastus2euap, francecentral, francesouth, germanynorth, germanywestcentral, indonesiacentral, israelcentral, israelnorthwest, italynorth, japaneast, japanwest, jioindiacentral, jioindiawest, koreacentral, koreasouth, malaysiawest, mexicocentral, newzealandnorth, northcentralus, northeurope, norwayeast, norwaywest, polandcentral, southafricanorth, southafricawest, southcentralus, southcentralus2, southeastasia, southeastus, southeastus3, southeastus5, southindia, southwestus, spaincentral, swedencentral, swedensouth, switzerlandnorth, switzerlandwest, taiwannorth, taiwannorthwest, uaecentral, uaenorth, uksouth, ukwest, usgovtexas, westcentralus, westeurope, westus, westus2, westus3
+## Availability
+- API Server VNet Integration is available in all GA public cloud regions except qatarcentral.
 
 ## Create an AKS cluster with API Server VNet Integration using managed VNet
 
@@ -191,7 +179,7 @@ az group create --location <location> --name <resource-group>
 > **API Server VNet Integration is a one-way, capacity-sensitive feature.**
 >
 > - **Manual restart required.**  
->   After enabling API Server VNet Integration using `az aks update --enable-apiserver-vnet-integration`, you must immediately restart the cluster for the change to take effect. This restart is not automated. Delaying the restart increases the risk of capacity becoming unavailable, which can prevent the API server from starting.
+>   After enabling API Server VNet Integration using `az aks update --enable-apiserver-vnet-integration`, due to control plane resource transition, you must immediately restart the cluster for the change to take effect. This restart is not automated. Delaying the restart increases the risk of capacity becoming unavailable, which can prevent the API server from starting. The cluster restart also ensures that all nodes reliably reconnect to the new API server endpoint.
 >
 > - **Capacity is validated, but not reserved.**  
 >   AKS validates regional capacity when you enable the feature on an existing cluster, but this validation does not reserve capacity. If the restart is delayed and capacity becomes unavailable in the meantime, the cluster may fail to start after a stop or restart. Clusters that enabled this feature before general availability (GA), or that have not yet restarted since enablement, will not undergo capacity validation.
@@ -227,7 +215,9 @@ AKS clusters configured with API Server VNet Integration can have public network
     ```azurecli-interactive
     az aks update --name <cluster-name> \
     --resource-group <resource-group> \
-    --enable-private-cluster
+    --enable-private-cluster \
+    --enable-apiserver-vnet-integration \
+    --apiserver-subnet-id <apiserver-subnet-resource-id>
     ```
 
 ### Disable private cluster mode

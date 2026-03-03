@@ -13,8 +13,7 @@ ms.service: azure-kubernetes-service
 
 In this article, you learn how to upgrade your Basic Load Balancer instances to Standard Load Balancer on Azure Kubernetes Services (AKS). We recommend using Standard Load Balancer for all production instances. It provides many [key differences](/azure/load-balancer/load-balancer-basic-upgrade-guidance#basic-load-balancer-sku-vs-standard-load-balancer-sku) to your infrastructure. For guidance on upgrading from Basic Load Balancer to Standard Load Balancer outside of AKS, see the [official guidance for Basic Load Balancer upgrade][load-balancer-upgrade-guidance].
 
-> [!IMPORTANT]
-> Basic Load Balancer retires on September 30, 2025. For more information, see the [official announcement](https://azure.microsoft.com/updates/azure-basic-load-balancer-will-be-retired-on-30-september-2025-upgrade-to-standard-load-balancer/). If you're currently using Basic Load Balancer, make sure to upgrade to Standard Load Balancer before the retirement date to avoid your cluster being out of support. This article helps guide you through the upgrade process.
+[!INCLUDE [basic load balancer retirement](./includes/basic-load-balancer-retirement.md)]
 
 > [!NOTE]
 > For clusters using both Availability Sets and the Basic Load Balancer, there's a separate `az aks update` command you need to run to perform both migrations at once (Availability Sets to Virtual Machine node pools, and Basic Load Balancer to Standard Load Balancer). For steps on performing this migration, see the [Availability Sets migration][availability-sets] guidance.
@@ -38,7 +37,7 @@ Your cluster must meet the following prerequisites before you can perform the mi
 
 ## Upgrade Basic Load Balancer to Standard Load Balancer
 
-1. Upgrade your Basic Load Balancer to Standard Load Balancer using the [`az aks update`](/cli/azure/aks#az_aks_create) command with the `--load-balancer-sku` flag set to `Standard`.
+1. Upgrade your Basic Load Balancer to Standard Load Balancer using the [`az aks update`](/cli/azure/aks#az-aks-create) command with the `--load-balancer-sku` flag set to `Standard`.
 
     ```azurecli-interactive
     az aks update \
@@ -47,7 +46,7 @@ Your cluster must meet the following prerequisites before you can perform the mi
       --load-balancer-sku=Standard
     ```
 
-1. Verify the migration was successful using the [`az aks show`](/cli/azure/aks#az_aks_show) command.
+1. Verify the migration was successful using the [`az aks show`](/cli/azure/aks#az-aks-show) command.
 
     ```azurecli-interactive
     az aks show \
@@ -68,13 +67,13 @@ Your cluster must meet the following prerequisites before you can perform the mi
 
 You can confirm the new IP addresses associated with outbound rules by confirming the resource IDs for the IP addresses and then listing the IP addresses.
 
-1. Get the resource ID for the outbound IP addresses using the [`az aks show`](/cli/azure/aks#az_aks_show) command.
+1. Get the resource ID for the outbound IP addresses using the [`az aks show`](/cli/azure/aks#az-aks-show) command.
 
     ```azurecli-interactive
     az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME --query networkProfile.loadBalancerProfile.effectiveOutboundIPs[].id
     ```
 
-1. Get the new IP address for each resource ID using the [`az network public-ip show`](/cli/azure/network/public-ip#az_network_public_ip_show) command.
+1. Get the new IP address for each resource ID using the [`az network public-ip show`](/cli/azure/network/public-ip#az-network-public-ip-show) command.
 
     ```azurecli-interactive
     az network public-ip show --ids $IP_RESOURCE_ID --query ipAddress -o tsv
@@ -165,7 +164,7 @@ To run the migration commands, you need:
 
 ### How can I see if Key Management Service (KMS) encryption is disabled?
 
-You can check whether KMS encryption is enabled on your AKS cluster using the [`az aks list`](/cli/azure/aks#az_aks_list) command.
+You can check whether KMS encryption is enabled on your AKS cluster using the [`az aks list`](/cli/azure/aks#az-aks-list) command.
 
 ```azurecli-interactive
 az aks list --query "[].{Name:name, KmsEnabled:securityProfile.azureKeyVaultKms.enabled, KeyId:securityProfile.azureKeyVaultKms.keyId}"

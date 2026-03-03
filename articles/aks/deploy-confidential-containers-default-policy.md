@@ -21,8 +21,7 @@ In general, getting started with AKS Confidential Containers involves the follow
 * Add a security policy to your pod YAML manifest
 * Deploy your application in confidential computing
 
-> [!IMPORTANT]
-> Starting on **30 November 2025**, AKS will no longer support or provide security updates for Azure Linux 2.0. Starting on **31 March 2026**, node images will be removed, and you'll be unable to scale your node pools. Migrate to a supported Azure Linux version by [**upgrading your node pools**](/azure/aks/upgrade-aks-cluster) to a supported Kubernetes version or migrating to [`osSku AzureLinux3`](/azure/aks/upgrade-os-version). For more information, see [[Retirement] Azure Linux 2.0 node pools on AKS](https://github.com/Azure/AKS/issues/4988).
+[!INCLUDE [azure linux 2.0 retirement](./includes/azure-linux-retirement.md)]
 
 ## Prerequisites
 
@@ -429,21 +428,21 @@ kubectl delete pod pod-name
 [download-setup-key-script]: https://github.com/microsoft/confidential-container-demos/blob/add-kafka-demo/kafka/setup-key.sh
 
 <!-- INTERNAL LINKS -->
-[upgrade-cluster-enable-workload-identity]: workload-identity-deploy-cluster.md#update-an-existing-aks-cluster
+[upgrade-cluster-enable-workload-identity]: workload-identity-deploy-cluster.md#deploy-and-configure-microsoft-entra-workload-id-on-an-azure-kubernetes-service-aks-cluster
 [deploy-and-configure-workload-identity]: workload-identity-deploy-cluster.md
 [install-azure-cli]: /cli/azure/install-azure-cli
 [entra-id-workload-identity-overview]: /azure/active-directory/workload-identities/workload-identities-overview
 [aks-workload-identity-overview]: workload-identity-overview.md
 [cluster-access-and-identity-options]: concepts-identity.md
 [DC8as-series]: /azure/virtual-machines/dcasccv5-dcadsccv5-series
-[az-aks-get-credentials]: /cli/azure/aks#az_aks_get_credentials
-[az-feature-register]: /cli/azure/feature#az_feature_register
+[az-aks-get-credentials]: /cli/azure/aks#az-aks-get-credentials
+[az-feature-register]: /cli/azure/feature#az-feature-register
 [az-provider-register]: /cli/azure/provider#az-provider-register
 [az-feature-show]: /cli/azure/feature#az-feature-show
-[az-aks-nodepool-add]: /cli/azure/aks/nodepool#az_aks_nodepool_add
-[az-aks-delete]: /cli/azure/aks#az_aks_delete
-[az-aks-create]: /cli/azure/aks#az_aks_create
-[az-aks-update]: /cli/azure/aks#az_aks_update
+[az-aks-nodepool-add]: /cli/azure/aks/nodepool#az-aks-nodepool-add
+[az-aks-delete]: /cli/azure/aks#az-aks-delete
+[az-aks-create]: /cli/azure/aks#az-aks-create
+[az-aks-update]: /cli/azure/aks#az-aks-update
 [az-aks-install-cmd]: /cli/azure/aks#az-aks-install-cli
 [overview-confidential-containers]: confidential-containers-overview.md
 [azure-key-vault-managed-hardware-security-module]: /azure/key-vault/managed-hsm/overview

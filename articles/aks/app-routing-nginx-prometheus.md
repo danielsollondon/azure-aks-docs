@@ -3,7 +3,6 @@ title: Monitor the ingress-nginx controller metrics in the application routing a
 description: Configure Prometheus to scrape the ingress-nginx controller metrics.
 ms.service: azure-kubernetes-service
 ms.subservice: aks-networking
-ms.custom:
 author: sabbour
 ms.topic: how-to
 ms.date: 09/15/2025
@@ -12,6 +11,8 @@ ms.author: asabbour
 ---
 
 # Monitor the ingress-nginx controller metrics in the application routing add-on with Prometheus and Grafana
+
+[!INCLUDE [ingress-nginx-retirement](./includes/ingress-nginx-retirement.md)]
 
 The ingress-nginx controller in the application routing add-on exposes many metrics for requests, the nginx process, and the controller that can be helpful in analyzing the performance and usage of your application.
 
@@ -133,14 +134,14 @@ Then upload the desired dashboard file and click on **Load**.
 [az-extension-add]: /cli/azure/extension#az-extension-add
 [az-extension-update]: /cli/azure/extension#az-extension-update
 [install-azure-cli]: /cli/azure/install-azure-cli
-[az-keyvault-create]: /cli/azure/keyvault#az_keyvault_create
-[az-keyvault-certificate-import]: /cli/azure/keyvault/certificate#az_keyvault_certificate_import
-[az-keyvault-certificate-show]: /cli/azure/keyvault/certificate#az_keyvault_certificate_show
-[az-network-dns-zone-create]: /cli/azure/network/dns/zone#az_network_dns_zone_create
-[az-network-dns-zone-show]: /cli/azure/network/dns/zone#az_network_dns_zone_show
-[az-role-assignment-create]: /cli/azure/role/assignment#az_role_assignment_create
-[az-aks-addon-update]: /cli/azure/aks/addon#az_aks_addon_update
-[az-keyvault-set-policy]: /cli/azure/keyvault#az_keyvault_set_policy
+[az-keyvault-create]: /cli/azure/keyvault#az-keyvault-create
+[az-keyvault-certificate-import]: /cli/azure/keyvault/certificate#az-keyvault-certificate-import
+[az-keyvault-certificate-show]: /cli/azure/keyvault/certificate#az-keyvault-certificate-show
+[az-network-dns-zone-create]: /cli/azure/network/dns/zone#az-network-dns-zone-create
+[az-network-dns-zone-show]: /cli/azure/network/dns/zone#az-network-dns-zone-show
+[az-role-assignment-create]: /cli/azure/role/assignment#az-role-assignment-create
+[az-aks-addon-update]: /cli/azure/aks/addon#az-aks-addon-update
+[az-keyvault-set-policy]: /cli/azure/keyvault#az-keyvault-set-policy
 
 <!-- LINKS - external -->
 [osm-release]: https://github.com/openservicemesh/osm/releases/

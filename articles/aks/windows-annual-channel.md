@@ -12,6 +12,8 @@ ms.date: 07/01/2024
 
 # Use Windows Server Annual Channel for Containers on Azure Kubernetes Service (AKS) (Preview)
 
+[!INCLUDE [windows annual channel retirement](./includes/windows-annual-channel-retirement.md)]
+
 AKS supports [Windows Server Annual Channel for Containers](https://techcommunity.microsoft.com/t5/windows-server-news-and-best/windows-server-annual-channel-for-containers/ba-p/3866248) in public preview. Each channel version is released annually and is supported for *two years*. This channel is beneficial if you require increased innovation cycles and portability.
 
 Windows Server Annual Channel versions are based on the Kubernetes version of your node pool. To upgrade from one Annual Channel version to the next, you can [upgrade to a Kubernetes version][upgrade-aks-cluster] that supports the next Annual Channel version.
@@ -26,14 +28,14 @@ AKS releases support for new releases of Windows Server Annual Channel for Conta
 |--------------|-------------------|-------------------|-------------------|
 | 1.28 | 23H2 (preview only) | Windows Server 2022 | End of 1.33 support |
 | 1.34 | 24H2 | Windows Server 2022 & Windows Server 2025 | End of 1.35 support |
-| 1.36 | 25H2 | Windows Server 2025 | End of 1.38 support |
 
 ## Windows Server Annual Channel vs. Long Term Servicing Channel Releases (LTSC)
 
-AKS supports Long Term Servicing Channel Releases (LTSC), including Windows Server 2022 and Windows Server 2019. These come from a different release channel than Windows Server Annual Channel for Containers. To view our current recommendations, see the [Windows best practices documentation][windows-best-practices].
+AKS supports Long Term Servicing Channel Releases (LTSC), including Windows Server 2025, Windows Server 2022, and Windows Server 2019. These come from a different release channel than Windows Server Annual Channel for Containers. To view our current recommendations, see the [Windows best practices documentation][windows-best-practices].
 
-> [!NOTE]
-> Windows Server 2019 will retire after Kubernetes version 1.32 reaches end of support, and will not be supported in Kubernetes version 1.33 and above. Windows Server 2022 will retire after Kubernetes version 1.34 reaches end of support, and will not be supported in Kubernetes version 1.35 and above. For more information, see the [AKS release notes][release-notes].
+[!INCLUDE [windows server 2019 retirement](./includes/windows-server-2019-retirement.md)]
+
+[!INCLUDE [windows server 2022 retirement](./includes/windows-server-2022-retirement.md)]
 
 The following table compares Windows Server Annual Channel and Long Term Servicing Channel releases:
 
@@ -171,9 +173,9 @@ To learn more about Windows Containers on AKS, see the following resources:
 [install-azure-cli]: /cli/azure/install-azure-cli
 [az-extension-add]: /cli/azure/azure-cli-extensions-overview#add-extensions
 [az-extension-update]: /cli/azure/azure-cli-extensions-overview#update-extensions
-[az-feature-register]: /cli/azure/feature#az_feature_register
-[az-feature-show]: /cli/azure/feature#az_feature_show
-[az-provider-register]: /cli/azure/provider#az_provider_register
+[az-feature-register]: /cli/azure/feature#az-feature-register
+[az-feature-show]: /cli/azure/feature#az-feature-show
+[az-provider-register]: /cli/azure/provider#az-provider-register
 [az-aks-nodepool-add]: /cli/azure/aks/nodepool#az-aks-nodepool-add
 [new-azaksnodepool]: /powershell/module/az.aks/new-azaksnodepool
 [release-notes]: https://github.com/Azure/AKS/releases

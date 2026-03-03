@@ -1,12 +1,13 @@
 ---
-title: Windows container considerations in Azure Kubernetes Service
+title: Windows Container Considerations in Azure Kubernetes Service (AKS)
 titleSuffix: Azure Kubernetes Service
 description: See the Windows container considerations with Azure Kubernetes Service (AKS).
 ms.topic: overview
 ms.custom: linux-related-content
-ms.date: 01/12/2024
+ms.date: 07/07/2025
 ms.author: schaffererin
 author: schaffererin
+ms.service: azure-kubernetes-service
 # Customer intent: As a cloud administrator using Azure Kubernetes Service, I want to understand the differences between Windows and Linux containers, so that I can effectively manage deployments and ensure compatibility in my containerized environment.
 ---
 
@@ -20,8 +21,9 @@ Some of the major differences include:
 - **File permissions**: Windows Server uses an access control list based on SIDs rather than a bitmask of permissions and UID+GID.
 - **File paths**: The convention on Windows Server is to use \ instead of /. In pod specs that mount volumes, specify the path correctly for Windows Server containers. For example, rather than a mount point of */mnt/volume* in a Linux container, specify a drive letter and location such as */K/Volume* to mount as the *K:* drive.
 
-> [!NOTE]
-> For Kubernetes versions 1.25 and higher, Windows Server 2022 is the default OS. Windows Server 2019 is being retired after Kubernetes version 1.32 reaches end-of-life (EOL) and won't be supported in future releases. For more information, see the [AKS release notes][aks-release-notes].
+[!INCLUDE [windows server 2019 retirement](./includes/windows-server-2019-retirement.md)]
+
+[!INCLUDE [windows server 2022 retirement](./includes/windows-server-2022-retirement.md)]
 
 This article covers important considerations to keep in mind when using Windows containers instead of Linux containers in Kubernetes. For an in-depth comparison of Windows and Linux containers, see [Comparison with Linux][comparison-with-linux].
 
@@ -39,7 +41,7 @@ This article covers important considerations to keep in mind when using Windows 
 | [Open Service Mesh][open-service-mesh] | Not supported. |
 | [GPU][gpu] | Supported in preview. |
 | [Multi-instance GPU][multi-instance-gpu] | Not supported. |
-| [Generation 2 VMs (preview)][gen-2-vms] | Supported. |
+| [Generation 2 VMs][gen-2-vms] | Supported. Default in Windows Server 2025. |
 | [Custom node config][custom-node-config] | • Custom node config has two configurations:<br/> • [kubelet][custom-kubelet-parameters]: Supported.<br/> • OS config: Not supported. |
 
 ## Next steps
@@ -63,6 +65,6 @@ For more information on Windows containers, see the [Windows Server containers F
 [open-service-mesh]: open-service-mesh-about.md
 [gpu]: use-windows-gpu.md
 [multi-instance-gpu]: gpu-multi-instance.md
-[gen-2-vms]: generation-2-vm.md
+[gen-2-vms]: generation-2-vms.md
 [custom-node-config]: custom-node-configuration.md
-[custom-kubelet-parameters]: custom-node-configuration.md#kubelet-custom-configuration
+[custom-kubelet-parameters]: custom-node-configuration.md#kubelet-configuration

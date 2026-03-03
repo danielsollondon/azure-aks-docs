@@ -4,9 +4,9 @@ description: Learn what ports and addresses are required to control egress traff
 ms.subservice: aks-networking
 ms.custom: build-2024, quarterly
 ms.topic: how-to
-ms.author: allensu
+ms.author: davidsmatlak
 ms.date: 06/10/2025
-author: asudbring
+author: davidsmatlak
 
 # Customer intent: "As a Kubernetes cluster operator, I want to understand the outbound network and FQDN rules necessary to control egress traffic, so that I can enhance security and ensure proper functionality within my Azure Kubernetes Service deployment."
 ---
@@ -17,8 +17,7 @@ This article provides the necessary details that allow you to secure outbound tr
 
 To see an example configuration using Azure Firewall, visit [Control egress traffic using Azure Firewall in AKS](limit-egress-traffic.md).
 
-> [!IMPORTANT]
-> Starting on **30 November 2025**, AKS will no longer support or provide security updates for Azure Linux 2.0. Starting on **31 March 2026**, node images will be removed, and you'll be unable to scale your node pools. Migrate to a supported Azure Linux version by [**upgrading your node pools**](/azure/aks/upgrade-aks-cluster) to a supported Kubernetes version or migrating to [`osSku AzureLinux3`](/azure/aks/upgrade-os-version). For more information, see [[Retirement] Azure Linux 2.0 node pools on AKS](https://github.com/Azure/AKS/issues/4988).
+[!INCLUDE [azure linux 2.0 retirement](./includes/azure-linux-retirement.md)]
 
 ## Background
 
@@ -77,6 +76,7 @@ The following network and FQDN/application rules are required for an AKS cluster
 
 ### Microsoft Azure operated by 21Vianet required network rules
 
+For information about retired Microsoft Defender for Cloud features, see [Microsoft Defender for Containers](#microsoft-defender-for-containers).
 
 | Destination Endpoint                                                             | Protocol | Port    | Use  |
 |----------------------------------------------------------------------------------|----------|---------|------|
@@ -88,6 +88,8 @@ The following network and FQDN/application rules are required for an AKS cluster
 | **`APIServerPublicIP:443`** `(if running pods/deployments, like Ingress Controller, that access the API Server)` | TCP      | 443     | Required if running pods/deployments that access the API Server (like Ingress Controller), those pod/deployments would use the API IP.  |
 
 ### Microsoft Azure operated by 21Vianet required FQDN / application rules
+
+For information about retired Microsoft Defender for Cloud features, see [Microsoft Defender for Containers](#microsoft-defender-for-containers).
 
 | Destination FQDN                               | Port            | Use      |
 |------------------------------------------------|-----------------|----------|
@@ -165,6 +167,8 @@ If you choose to block/not allow these FQDNs, the nodes will only receive OS upd
 
 ### Microsoft Defender for Containers
 
+[!INCLUDE [21vianet-retirement](includes/21vianet-retirement.md)]
+
 #### Required FQDN / application rules
 
 | FQDN                                                       | Port      | Use      |
@@ -216,6 +220,8 @@ If your cluster has outbound type user-defined routing and Azure Firewall, the f
 
 #### Microsoft Azure operated by 21Vianet cloud required FQDN / application rules
 
+For information about retired Microsoft Defender for Cloud features, see [Microsoft Defender for Containers](#microsoft-defender-for-containers).
+
 | Endpoint| Purpose | Port |
 |:---|:---|:---|
 | **`*.ods.opinsights.azure.cn`** | Data ingestion | 443 |
@@ -251,6 +257,8 @@ If your cluster has outbound type user-defined routing and Azure Firewall, the f
 | **`dc.services.visualstudio.com`** | **`HTTPS:443`** | Azure Policy add-on that sends telemetry data to applications insights endpoint. |
 
 #### Microsoft Azure operated by 21Vianet required FQDN / application rules
+
+For information about retired Microsoft Defender for Cloud features, see [Microsoft Defender for Containers](#microsoft-defender-for-containers).
 
 | FQDN                                          | Port      | Use      |
 |-----------------------------------------------|-----------|----------|
@@ -305,7 +313,7 @@ If your cluster has outbound type user-defined routing and Azure Firewall, the f
 
 ### Istio-based service mesh add-on
 
-In Istio=based service mesh add-on, if you are setting up istiod with a Plugin Certificate Authority (CA) or if you are setting up secure ingress gateway, Azure Key Vault provider for Secrets Store CSI Driver is required for these features. Outbound network requirements for Azure Key Vault provider for Secrets Store CSI Driver can be found [here][akv-outbound].
+If you are using the [Istio-based service mesh add-on][istio-addon] and setting up Istio with a [plug-in certificate authority (CA)][istio-plugin-ca] or [secure ingress gateways][istio-secure-gateways], Azure Key Vault provider for Secrets Store CSI Driver is required for these features. Outbound network requirements for Azure Key Vault provider for Secrets Store CSI Driver can be found [here][akv-outbound].
 
 ### Application routing add-on
 
@@ -323,6 +331,9 @@ If you want to restrict how pods communicate between themselves and East-West tr
 [use-network-policies]: ./use-network-policies.md
 [network-isolated-cluster]: ./concepts-network-isolated.md
 [akv-outbound]: #azure-key-vault-provider-for-secrets-store-csi-driver
+[istio-addon]: ./istio-deploy-addon.md
+[istio-plugin-ca]: ./istio-plugin-ca.md
+[istio-secure-gateways]: ./istio-secure-gateway.md
 
 <!-- LINKS - external -->
 

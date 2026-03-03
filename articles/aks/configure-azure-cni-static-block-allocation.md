@@ -2,8 +2,8 @@
 title: Configure Azure CNI Pod Subnet - Static Block Allocation
 titleSuffix: Azure Kubernetes Service
 description: Learn how to configure Azure CNI Pod Subnet - Static Block Allocation in Azure Kubernetes Service (AKS)
-author: asudbring
-ms.author: allensu
+author: davidsmatlak
+ms.author: davidsmatlak
 ms.service: azure-kubernetes-service
 ms.subservice: aks-networking
 ms.topic: how-to
@@ -192,7 +192,7 @@ Learn more about networking in AKS in the following articles:
 <!-- LINKS - Internal -->
 [azure-cni-prereq]: ./configure-azure-cni.md#prerequisites
 [azure-cni-deployment-parameters]: ./azure-cni-overview.md#deployment-parameters
-[az-aks-enable-addons]: /cli/azure/aks#az_aks_enable_addons
+[az-aks-enable-addons]: /cli/azure/aks#az-aks-enable-addons
 [az-extension-add]: /cli/azure/extension#az-extension-add
 [az-extension-update]: /cli/azure/extension#az-extension-update
 [az-feature-register]: /cli/azure/feature#az-feature-register

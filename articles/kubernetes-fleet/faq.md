@@ -1,7 +1,7 @@
 ---
 title: "Frequently asked questions - Azure Kubernetes Fleet Manager"
 description: This article covers the frequently asked questions for Azure Kubernetes Fleet Manager
-ms.date: 09/16/2025
+ms.date: 01/08/2026
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager
@@ -23,9 +23,9 @@ Fleet Manager is a regional resource. Support for region failover for disaster r
 
 ### How many clusters can I join to Fleet Manager?
 
-Fleet Manager (with or without a hub cluster) supports joining up to 100 AKS clusters.
+Fleet Manager (with or without a hub cluster) supports joining up to 200 Kubernetes clusters. Member clusters can be a mix of AKS and Arc-enabled Kubernetes.
 
-If you would like Fleet Manager to support more than 100 clusters, [add feedback](https://github.com/Azure/AKS/issues/5066).
+If you would like Fleet Manager to support more than 200 clusters, [add feedback](https://github.com/Azure/AKS/issues/5066).
 
 ### What AKS clusters can be joined as members?
 
@@ -49,9 +49,9 @@ az fleet member create \
 
 ### Relationship to Azure Arc-enabled Kubernetes
 
-Fleet Manager supports joining only AKS clusters as member clusters. 
+Fleet Manager supports both AKS clusters and Arc-enabled Kubernetes clusters as members. Arc-enabled cluster support in preview.
 
-Support for joining non-AKS clusters is on our roadmap. Provide [feedback](https://github.com/Azure/AKS/issues/3410) if support for non-AKS clusters is important for you.
+Track general availability of Arc-enabled cluster support via roadmap item [3410](https://github.com/Azure/AKS/issues/3410).
 
 ### Relationship to Azure Kubernetes Service clusters
 
@@ -121,6 +121,24 @@ Node consistency is only guaranteed for all clusters contained in a single [upda
 
 There's no consistency guarantee for node image versions across separate update runs.
 
+### How can I find out which node images were used in an update run?
+
+Update run has a list of the selected node images used for a run. This information is available even if the update run hasn't started.
+
+There can be more than a single node image selected based on the different node pools operating across all clusters selected for update.
+
+You can find the images selected by using this Azure CLI command:
+
+```azurecli
+az fleet updaterun show \
+    --resource-group ${GROUP} \
+    --fleet-name ${FLEET} \
+    --name ${UPDATE_RUN_NAME} \
+    --query "status.nodeImageSelection.selectedNodeImageVersions"
+```
+
+You can also use the `View JSON` option in the Update Run Overview page in the Azure portal to view the raw data for an update run.
+
 ### My update run is in a pending state for quite some time. What should I do?
 
 Fleet Manager update runs can be in a pending state for many reasons. You can view the status of an update run either via the Azure portal, or by following our [monitoring documentation](./howto-monitor-update-runs.md).
@@ -137,7 +155,7 @@ See the previous question.
 
 ### Editing my update strategy didn't change the existing update runs that used it. Why not?
 
-When an update run is created, a copy of the chosen strategy is made and stored on the update run itself so that changes to the strategy don't affect executing update runs.
+When an update run is created, a copy of the strategy is stored on the update run so that changes to the strategy don't affect executing update runs.
 
 ### Can I preapprove an approval?
 
@@ -167,9 +185,10 @@ Yes. You can edit the existing strategy to include approvals. However, existing 
 
 ### Can I select resources inside a namespace for propagation?
 
-Fleet Manager only currently supports propagating resources at the cluster and namespace level. You can't select individual resources inside a namespace for propagation.
+Yes. Fleet Manager supports both cluster-scoped and namespace-scoped resource placement:
 
-Provide [feedback](https://github.com/Azure/AKS/issues/5067) if support for intra-namespace resource placement is important for you.
+* **ClusterResourcePlacement**: Propagates cluster-scoped resources and entire namespaces (including all their contents) to member clusters. For more information, see [Using ClusterResourcePlacement to deploy cluster-scoped resources](./concepts-resource-propagation.md).
+* **ResourcePlacement**: Provides fine-grained control to select and propagate specific namespace-scoped resources (such as ConfigMaps, Secrets, Deployments) within a namespace. For more information, see [Using ResourcePlacement to deploy namespace-scoped resources](./concepts-namespace-scoped-resource-propagation.md).
 
 ## Automated Deployments FAQs
 

@@ -22,7 +22,7 @@ You might not need to continuously run your AKS workloads. For example, you migh
 * You can't stop node pools from clusters which use the [Node Autoprovisioning (NAP)](node-autoprovision.md) feature.
 
 > [!TIP]
-> You can use Microsoft Copilot in Azure to stop and start your node pools in the Azure portal. For more information, see [Work with AKS clusters efficiently using Microsoft Copilot in Azure](/azure/copilot/work-aks-clusters#start-and-stop-node-pools).
+> You can use Azure Copilot to stop and start your node pools in the Azure portal. For more information, see [Work with AKS clusters efficiently using Azure Copilot](/azure/copilot/work-aks-clusters#start-and-stop-node-pools).
 
 ## Before you begin
 
@@ -113,7 +113,7 @@ This article assumes you have an existing AKS cluster. If you need an AKS cluste
 [aks-quickstart-cli]: ./learn/quick-kubernetes-deploy-cli.md
 [aks-quickstart-portal]: ./learn/quick-kubernetes-deploy-portal.md
 [aks-quickstart-powershell]: ./learn/quick-kubernetes-deploy-powershell.md
-[az-aks-nodepool-stop]: /cli/azure/aks/nodepool#az_aks_nodepool_stop
-[az-aks-nodepool-start]:/cli/azure/aks/nodepool#az_aks_nodepool_start
-[az-aks-nodepool-show]: /cli/azure/aks/nodepool#az_aks_nodepool_show
+[az-aks-nodepool-stop]: /cli/azure/aks/nodepool#az-aks-nodepool-stop
+[az-aks-nodepool-start]:/cli/azure/aks/nodepool#az-aks-nodepool-start
+[az-aks-nodepool-show]: /cli/azure/aks/nodepool#az-aks-nodepool-show
 

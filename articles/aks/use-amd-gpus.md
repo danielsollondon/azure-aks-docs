@@ -21,7 +21,8 @@ This article helps you provision nodes with schedulable AMD GPUs on new and exis
 * AKS currently supports the `Standard_ND96isr_MI300X_v5` Azure VM size powered by the [MI300 series AMD GPU](https://www.amd.com/en/products/accelerators/instinct/mi300.html).
 * Updating an existing node pool to add an AMD GPU VM size is not supported on AKS.
 * Updating a non-AMD GPU-enabled node pool with an AMD GPU VM size is not supported.
-* `AzureLinux` and `Windows` are not yet supported with AMD GPU.
+* `AzureLinux`, `Windows`, `AzureLinuxOSGuard` and `flatcar` aren't supported with AMD GPU.
+
 
 ## Before you begin
 
@@ -63,7 +64,7 @@ Using AMD GPUs involves the installation of various AMD GPU software components 
     --name AKSInfinibandSupport
     ```
 
-1. Create an AMD GPU-enabled node pool using the [`az aks nodepool add`](/cli/azure/aks#az_aks_nodepool_add) command and skip default driver installation by setting the API field `--gpu-driver` to the value `none`:
+1. Create an AMD GPU-enabled node pool using the [`az aks nodepool add`](/cli/azure/aks#az-aks-nodepool-add) command and skip default driver installation by setting the API field `--gpu-driver` to the value `none`:
 
     ```azurecli-interactive
     az aks nodepool add \
@@ -210,7 +211,12 @@ kubectl delete jobs samples-tf-mnist-demo
 
 
 <!-- LINKS -->
-[az-aks-get-credentials]: /cli/azure/aks#az_aks_get_credentials
+[az-aks-get-credentials]: /cli/azure/aks#az-aks-get-credentials
 [aks-quickstart-cli]: ./learn/quick-kubernetes-deploy-cli.md
 [aks-quickstart-portal]: ./learn/quick-kubernetes-deploy-portal.md
 [aks-quickstart-powershell]: ./learn/quick-kubernetes-deploy-powershell.md
+[flatcar]: ./flatcar-container-linux-for-aks.md
+[os-guard]: ./use-azure-linux-os-guard.md
+[azure-pricing]: ./free-standard-pricing-tiers.md
+[azure-availability]: ./quotas-skus-regions.md
+[install-azure-cli]: /cli/azure/install-azure-cli

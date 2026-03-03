@@ -93,7 +93,7 @@ AKS clusters can use [Kubernetes role-based access control (Kubernetes RBAC)][k8
 For information about AKS resource limits and region availability, see [Quotas, virtual machine size restrictions, and region availability in AKS][quotas-skus-regions].
 
 > [!IMPORTANT]
-> This tutorial creates a three-node cluster. To ensure your cluster operates reliably, you should run at least two nodes. A minimum of three nodes is required to use Azure Container Storage. If you get an error message when trying to create the cluster, then you might need to request a quota increase for your Azure subscription or try a different Azure region. Alternatively, you can omit the node VM size parameter to use the default VM size.
+> This tutorial creates a three-node cluster. If you get an error message when trying to create the cluster, then you might need to request a quota increase for your Azure subscription or try a different Azure region. Alternatively, you can use fewer nodes, or omit the node VM size parameter to use the default VM size.
 
 ### [Azure CLI](#tab/azure-cli)
 
@@ -239,9 +239,9 @@ In the next tutorial, you learn how to deploy Azure Container Storage on your cl
 [aks-tutorial-prepare-acr]: ./tutorial-kubernetes-prepare-acr.md
 [aks-tutorial-prepare-app]: ./tutorial-kubernetes-prepare-app.md
 [aks-tutorial-acstor]: ./tutorial-kubernetes-deploy-azure-container-storage.md
-[az aks create]: /cli/azure/aks#az_aks_create
-[az aks install-cli]: /cli/azure/aks#az_aks_install_cli
-[az aks get-credentials]: /cli/azure/aks#az_aks_get_credentials
+[az aks create]: /cli/azure/aks#az-aks-create
+[az aks install-cli]: /cli/azure/aks#az-aks-install-cli
+[az aks get-credentials]: /cli/azure/aks#az-aks-get-credentials
 [azure-azd-install]: /azure/developer/azure-developer-cli/install-azd
 [azure-cli-install]: /cli/azure/install-azure-cli
 [container-registry-integration]: ./cluster-container-registry-integration.md
@@ -252,4 +252,3 @@ In the next tutorial, you learn how to deploy Azure Container Storage on your cl
 [import-azakscredential]: /powershell/module/az.aks/import-azakscredential
 [aks-k8s-rbac]: azure-ad-rbac.md
 [azd-auth-login]: /azure/developer/azure-developer-cli/reference#azd-auth-login
-

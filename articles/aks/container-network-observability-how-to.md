@@ -19,8 +19,7 @@ You can use Container Network Observability to collect data about the network tr
 
 Container Network Observability is one of the features of Advanced Container Networking Services. For more information about Advanced Container Networking Services for Azure Kubernetes Service (AKS), see [What is Advanced Container Networking Services for Azure Kubernetes Service (AKS)?](advanced-container-networking-services-overview.md)
 
-> [!IMPORTANT]
-> Starting on **30 November 2025**, AKS will no longer support or provide security updates for Azure Linux 2.0. Starting on **31 March 2026**, node images will be removed, and you'll be unable to scale your node pools. Migrate to a supported Azure Linux version by [**upgrading your node pools**](/azure/aks/upgrade-aks-cluster) to a supported Kubernetes version or migrating to [`osSku AzureLinux3`](/azure/aks/upgrade-os-version). For more information, see [[Retirement] Azure Linux 2.0 node pools on AKS](https://github.com/Azure/AKS/issues/4988).
+[!INCLUDE [azure linux 2.0 retirement](./includes/azure-linux-retirement.md)]
 
 ## Prerequisites
 
@@ -97,7 +96,7 @@ az aks create \
 
 ### Enable Advanced Container Networking Services on an existing cluster
 
-The [`az aks update`](/cli/azure/aks#az_aks_update) command with the Advanced Container Networking Services flag, `--enable-acns`, updates an existing AKS cluster with all Advanced Container Networking Services features that includes [Container Network Observability](./advanced-container-networking-services-overview.md#container-network-observability) and the [Container Network Security](./advanced-container-networking-services-overview.md#container-network-security) feature.
+The [`az aks update`](/cli/azure/aks#az-aks-update) command with the Advanced Container Networking Services flag, `--enable-acns`, updates an existing AKS cluster with all Advanced Container Networking Services features that includes [Container Network Observability](./advanced-container-networking-services-overview.md#container-network-observability) and the [Container Network Security](./advanced-container-networking-services-overview.md#container-network-security) feature.
 
 
 > [!NOTE]
@@ -114,7 +113,7 @@ az aks update \
 
 ## Get cluster credentials 
 
-Once you have Get your cluster credentials using the [`az aks get-credentials`](/cli/azure/aks#az_aks_get_credentials) command.
+Once you have Get your cluster credentials using the [`az aks get-credentials`](/cli/azure/aks#az-aks-get-credentials) command.
 
 ```azurecli-interactive
 az aks get-credentials --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP
@@ -275,12 +274,12 @@ Skip this step if using Azure managed Grafana
       * **Pod Flows (Workload):** shows L4/L7 packet flows to/from the specified workload (for example, Pods of a Deployment or DaemonSet). (ID: [20929](https://grafana.com/grafana/dashboards/20929-kubernetes-networking-pod-flows-workload/))
 
     > [!NOTE] 
-    > * Depending on your Prometheus/Grafana instances’ settings, some dashboard panels require specific tweaks to display all data.
+    > * Depending on your Prometheus/Grafana instances' settings, some dashboard panels require specific tweaks to display all data.
     > * Cilium doesn't currently support DNS metrics/dashboards.
 
 ## Clean up resources
 
-If you don't plan on using this application, delete the other resources you created in this article using the [`az group delete`](/cli/azure/#az_group_delete) command.
+If you don't plan on using this application, delete the other resources you created in this article using the [`az group delete`](/cli/azure/#az-group-delete) command.
 
 ```azurecli-interactive
   az group delete --name $RESOURCE_GROUP

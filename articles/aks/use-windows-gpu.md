@@ -142,9 +142,7 @@ When creating a Windows node pool with N-series (NVIDIA GPU) VM sizes in AKS, th
 
 AKS has automatic GPU driver installation enabled by default. In some cases, such as installing your own drivers, you may want to skip GPU driver installation.
 
-> [!NOTE]
-> The `gpu-driver` API field is a suggested alternative for customers previously using the `--skip-gpu-driver-install` node pool tag. 
->- The `--skip-gpu-driver-install` node pool tag on AKS will be retired on 14 August 2025. To retain the existing behavior of skipping automatic GPU driver installation, upgrade your node pools to the latest node image version and set the `--gpu-driver` field to `none`. After 14 August 2025, you won't be able to provision AKS GPU-enabled node pools with the `--skip-gpu-driver-install` node pool tag to bypass this default behavior. For more information, see [`skip-gpu-driver` tag retirement](https://aka.ms/aks/skip-gpu-driver-tag-retirement).
+[!INCLUDE [skip gpu driver install retirement](./includes/skip-gpu-driver-install-retirement.md)]
 
 1. Create a node pool using the [`az aks nodepool add`][az-aks-nodepool-add] command and setting the API field `--gpu-driver` to `none` to skip automatic GPU driver installation.
 
@@ -309,10 +307,10 @@ After creating your cluster, confirm that GPUs are schedulable in Kubernetes.
 [nvidia-github]: https://github.com/NVIDIA/k8s-device-plugin
 
 <!-- LINKS - internal -->
-[az-aks-create]: /cli/azure/aks#az_aks_create
-[az-aks-nodepool-update]: /cli/azure/aks/nodepool#az_aks_nodepool_update
-[az-aks-nodepool-add]: /cli/azure/aks/nodepool#az_aks_nodepool_add
-[az-aks-get-credentials]: /cli/azure/aks#az_aks_get_credentials
+[az-aks-create]: /cli/azure/aks#az-aks-create
+[az-aks-nodepool-update]: /cli/azure/aks/nodepool#az-aks-nodepool-update
+[az-aks-nodepool-add]: /cli/azure/aks/nodepool#az-aks-nodepool-add
+[az-aks-get-credentials]: /cli/azure/aks#az-aks-get-credentials
 [aks-quickstart-cli]: ./learn/quick-windows-container-deploy-cli.md
 [aks-quickstart-portal]: ./learn/quick-windows-container-deploy-portal.md
 [aks-quickstart-powershell]: ./learn/quick-windows-container-deploy-powershell.md

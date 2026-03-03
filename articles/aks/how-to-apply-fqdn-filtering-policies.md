@@ -90,7 +90,7 @@ az aks create \
 
 ### Enable Advanced Container Networking Services on an existing cluster
 
-The [`az aks update`](/cli/azure/aks#az_aks_update) command with the Advanced Container Networking Services flag, `--enable-acns`, updates an existing AKS cluster with all Advanced Container Networking Services features which includes [Container Network Observability](./advanced-container-networking-services-overview.md?tabs=cilium#container-network-observability) and the [Container Network Security](./advanced-container-networking-services-overview.md?tabs=cilium#container-network-security) feature
+The [`az aks update`](/cli/azure/aks#az-aks-update) command with the Advanced Container Networking Services flag, `--enable-acns`, updates an existing AKS cluster with all Advanced Container Networking Services features which includes [Container Network Observability](./advanced-container-networking-services-overview.md?tabs=cilium#container-network-observability) and the [Container Network Security](./advanced-container-networking-services-overview.md?tabs=cilium#container-network-security) feature
 
 
 > [!NOTE]
@@ -107,7 +107,7 @@ az aks update \
 
 ## Get cluster credentials 
 
-Get your cluster credentials using the [`az aks get-credentials`](/cli/azure/aks#az_aks_get_credentials) command.
+Get your cluster credentials using the [`az aks get-credentials`](/cli/azure/aks#az-aks-get-credentials) command.
 
 ```azurecli-interactive
 az aks get-credentials --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP
@@ -234,11 +234,41 @@ Cilium Agent blocked the request with the output:
 xx drop (Policy denied) flow 0xfddd76f6 to endpoint 0, ifindex 29, file bpf_lxc.c:1274, , identity 48447->world: 192.168.0.149:45830 -> 93.184.215.14:80 tcp SYN
 ```
 
+### Supported by CiliumClusterwideNetworkPolicy(CCNP)
+
+`CiliumClusterwideNetworkPolicy` supports FQDN filtering.
+
+> [!NOTE]
+> [Namespace specific information](https://docs.cilium.io/en/latest/security/policy/kubernetes/#namespace-specific-information) such as `io.kubernetes.pod.namespace` is only supported in cluster-wide policies.
+
+```
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: allow-bing-fqdn
+spec:
+  endpointSelector: {} # Applies to all pods in the cluster
+  egress:
+    - toEndpoints:
+      - matchLabels:
+          "k8s:io.kubernetes.pod.namespace": kube-system
+          "k8s:k8s-app": kube-dns
+      toPorts:
+        - ports:
+           - port: "53"
+             protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*.bing.com"
+    - toFQDNs:
+      - matchPattern: "*.bing.com"
+```
+
 ---
 
 ## Clean up resources
 
-If you don't plan on using this application, delete the other resources you created in this article using the [`az group delete`](/cli/azure/#az_group_delete) command.
+If you don't plan on using this application, delete the other resources you created in this article using the [`az group delete`](/cli/azure/#az-group-delete) command.
 
 ```azurecli-interactive
   az group delete --name $RESOURCE_GROUP
