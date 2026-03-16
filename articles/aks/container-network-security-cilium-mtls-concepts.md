@@ -11,9 +11,9 @@ ms.date: 03/16/2026
 
 # Cilium mTLS encryption (public preview)
 
-Cilium mTLS encryption provides transparent, mutual TLS (mTLS) encryption and authentication for pod-to-pod traffic in Kubernetes without requiring application changes or introducing any additional networking stack.
+Cilium mTLS encryption provides transparent, mutual TLS (mTLS) encryption and authentication for pod-to-pod traffic in Kubernetes without requiring application changes or introducing any extra networking stack.
 
-It ensures that both the source and destination workloads are cryptographically authenticated before any traffic is exchanged. This enables a zero-trust networking model for Kubernetes workloads.
+It ensures that both the source and destination workloads are cryptographically authenticated before any traffic is exchanged. This approach enables a zero-trust networking model for Kubernetes workloads.
 
 All encryption and authentication happens below the application layer, meaning workloads don't need to be modified, rebuilt, or restarted to benefit from mTLS.
 
@@ -25,7 +25,7 @@ Cilium mTLS encryption for AKS is part of the [Advanced Container Networking Ser
 
 At a high level, Cilium mTLS secures traffic by combining identity issuance, transparent traffic interception, and workload-level encryption enforcement.
 
-Each workload is assigned a cryptographic identity derived from Kubernetes attributes such as namespace and ServiceAccount. When pod-to-pod TCP traffic is initiated, it's transparently intercepted at the node level. The traffic is then authenticated and encrypted using mutual TLS before being forwarded to the destination workload.
+Each workload gets assigned a cryptographic identity derived from Kubernetes attributes such as namespace and ServiceAccount. When pod-to-pod TCP traffic is initiated, the traffic is transparently intercepted at the node level. The traffic is then authenticated and encrypted using mutual TLS before being forwarded to the destination workload.
 
 The system is composed of three cooperating components:
 
@@ -39,7 +39,7 @@ Together, these components ensure that authentication and encryption happen tran
 
 Cilium mTLS uses mutual authentication based on SPIFFE workload identity.
 
-Each workload is assigned a SPIFFE identity (SVID) derived from:
+Each workload gets assigned a SPIFFE identity (SVID) derived from:
 
 - Kubernetes namespace
 - Kubernetes ServiceAccount
@@ -50,7 +50,7 @@ When a workload initiates a connection:
 2. The destination ztunnel validates the presented identity.
 3. Both sides complete mutual verification before traffic is allowed to flow.
 
-Authentication decisions are based on workload identity rather than network location. This ensures that:
+Authentication decisions are based on workload identity rather than network location. This design ensures that:
 
 - Only authenticated workloads can communicate.
 - Identity remains consistent across rescheduling and scaling.
@@ -62,11 +62,11 @@ Authentication decisions are based on workload identity rather than network loca
 
 After successful authentication, traffic is protected using mutual TLS.
 
-1. TCP traffic is intercepted by Cilium.
-1. The source ztunnel initiates an mTLS session with the destination ztunnel.
-1. Certificates are exchanged and validated.
-1. Application data is encrypted before transmission.
-1. Traffic is decrypted only at the destination node before delivery to the workload.
+1. Cilium agent intercepts TCP traffic.
+2. The source ztunnel initiates an mTLS session with the destination ztunnel.
+3. Certificates are exchanged and validated.
+4. Application data is encrypted before transmission.
+5. Traffic is decrypted only at the destination node before delivery to the workload.
 
 Encryption is enforced at Layer 4 and applies to all TCP traffic between enrolled workloads.
 
@@ -89,13 +89,13 @@ SPIRE ensures that every workload identity is:
 
 This identity foundation enables strong, topology-independent trust decisions.
 
-### ztunnel (mTLS data plane)
+### Ztunnel (mTLS data plane)
 
-ztunnel is a lightweight, node-level Layer 4 proxy responsible for enforcing mTLS between workloads. It runs as a DaemonSet, with one instance per node, eliminating the need for per-pod sidecar proxies.
+Ztunnel is a lightweight, node-level Layer 4 proxy responsible for enforcing mTLS between workloads. It runs as a DaemonSet, with one instance per node, eliminating the need for per-pod sidecar proxies.
 
 When a workload initiates a TCP connection, ztunnel establishes a mutually authenticated TLS session with the peer node's ztunnel instance. It uses certificates obtained from SPIRE to authenticate both sides of the connection before allowing traffic to flow.
 
-ztunnel enforces the following guarantees:
+Ztunnel enforces the following guarantees:
 
 - Both sides of a connection must present valid workload certificates.
 - Certificates are verified against the cluster trust domain.
@@ -106,7 +106,7 @@ By centralizing mTLS enforcement at the node level, ztunnel provides strong secu
 
 ### Cilium (traffic interception and wiring)
 
-Cilium is responsible for making mTLS completely transparent to applications.
+Cilium is responsible for making mTLS transparent to applications.
 
 It installs redirect rules inside each pod's network namespace and intercepts inbound and outbound TCP traffic. Instead of allowing traffic to flow directly between pods, Cilium redirects it to the local ztunnel instance for authentication and encryption.
 
@@ -120,7 +120,7 @@ From the application's perspective, communication continues using standard TCP s
 
 Cilium mTLS is opt-in and scoped at the namespace level. A namespace must be explicitly labeled to enable mTLS enforcement. Once enabled, all pods within that namespace are subject to mandatory authentication and encryption.
 
-Pods in non-enrolled namespaces aren't affected. This allows incremental rollout and staged adoption across environments.
+Pods in non-enrolled namespaces aren't affected. This design allows incremental rollout and staged adoption across environments.
 
 ### Enforcement model
 
@@ -137,14 +137,14 @@ Encryption is applied only when both pods are enrolled. Traffic between enrolled
 
 - The feature is available only on clusters using Azure CNI powered by Cilium with [Advanced Container Networking Services (ACNS)](advanced-container-networking-services-overview.md) enabled.
 - mTLS is enabled at the namespace level. All pods in an enrolled namespace participate in mTLS. Pod-level opt-in or opt-out isn't supported.
-- Cilium mTLS currently protects TCP-based pod-to-pod traffic. Other protocols (for example, UDP) aren't encrypted or authenticated by mTLS at this time.
-- In the current phase, L4/L7 network policy enforcement is not supported with mTLS.
+- Cilium mTLS currently protects TCP-based pod-to-pod traffic. It doesn't currently encrypt or authenticate other protocols, including UDP.
+- In the current phase, L4/L7 network policy enforcement isn't supported with mTLS.
 - You can't bring a custom CA. SPIRE acts as the cluster Certificate Authority and manages certificate issuance and rotation.
 - Enabling both mTLS and WireGuard on the same cluster isn't supported.
 - Enabling both Istio and Cilium mTLS encryption isn't supported.
 - mTLS encryption for cross-cluster traffic isn't supported.
-- The integration requires iptables support in the kernel and cannot be used with environments that do not support iptables (such as some minimal container runtimes).
-- Pods without a network namespace path (such as host-networked pods) cannot be enrolled in ztunnel and will be skipped during enrollment.
+- The integration requires iptables support in the kernel and can't be used with environments that don't support iptables (such as some minimal container runtimes).
+- Pods without a network namespace path (such as host-networked pods) can't be enrolled in ztunnel and are excluded during the enrollment process.
 
 ## Pricing
 
