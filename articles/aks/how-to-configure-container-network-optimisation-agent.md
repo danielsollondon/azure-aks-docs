@@ -1,6 +1,6 @@
 ﻿---
-title: Deploy and use Container Networking Agent on AKS
-description: Learn how to deploy Container Networking Agent as an AKS extension to troubleshoot networking issues in Azure Kubernetes Service (AKS) clusters.
+title: Deploy and use Container Network Optimisation Agent on AKS
+description: Learn how to deploy Container Network Optimisation Agent as an AKS extension to troubleshoot networking issues in Azure Kubernetes Service (AKS) clusters.
 author: shaifaligargmsft
 ms.author: shaifaligarg
 ms.date: 02/23/2026
@@ -8,22 +8,22 @@ ms.topic: how-to
 ms.service: azure-kubernetes-service
 ---
 
-# Deploy and use Container Networking Agent on AKS
+# Deploy and use Container Network Optimisation Agent on AKS
 
-This article shows how to deploy Container Networking Agent on your Azure Kubernetes Service (AKS) cluster, configure authentication and identity, and use the agent to troubleshoot networking issues.
+This article shows how to deploy Container Network Optimisation Agent on your Azure Kubernetes Service (AKS) cluster, configure authentication and identity, and use the agent to troubleshoot networking issues.
 
-Container Networking Agent is an AI-powered diagnostic assistant that runs as an in-cluster web application. You describe networking problems in natural language, and the agent runs diagnostic commands (`kubectl`, `cilium`, `hubble`) against your cluster. It returns structured, evidence-backed reports with root cause analysis and remediation guidance.
+Container Network Optimisation Agent is an AI-powered diagnostic assistant that runs as an in-cluster web application. You describe networking problems in natural language, and the agent runs diagnostic commands (`kubectl`, `cilium`, `hubble`) against your cluster. It returns structured, evidence-backed reports with root cause analysis and remediation guidance.
 
-Container Networking Agent helps you troubleshoot:
+Container Network Optimisation Agent helps you troubleshoot:
 
 - DNS failures, including CoreDNS misconfigurations, network policies blocking DNS traffic, NodeLocal DNS issues, and Cilium FQDN egress restrictions.
 - Packet drops, including NIC-level RX drops, kernel packet loss, socket buffer overflow, SoftIRQ saturation, and ring buffer exhaustion across cluster nodes.
 - Kubernetes networking issues, including pod connectivity failures, service port misconfigurations, network policy conflicts, missing endpoints, and Hubble flow analysis.
 - Cluster resource queries for quick answers about pods, services, deployments, nodes, and namespaces.
 
-Container Networking Agent operates with read-only access to your cluster. It doesn't modify running workloads, configurations, or network policies. Remediation guidance is advisory only.
+Container Network Optimisation Agent operates with read-only access to your cluster. It doesn't modify running workloads, configurations, or network policies. Remediation guidance is advisory only.
 
-Container Networking Agent deploys as an AKS extension (`microsoft.containernetworkingagent`). It integrates with the Azure resource management plane, and is managed through the `az k8s-extension` CLI commands.
+Container Network Optimisation Agent deploys as an AKS extension (`microsoft.containernetworkingagent`). It integrates with the Azure resource management plane, and is managed through the `az k8s-extension` CLI commands.
 
 **Supported regions:** centralus, eastus, eastus2, uksouth, westus2.
 
@@ -73,9 +73,9 @@ Before you begin, ensure you have the following tools, permissions, and informat
 - The cluster must be able to pull container images from `acnpublic.azurecr.io`.
 
 > [!TIP]
-> Container Networking Agent works on clusters without Cilium or ACNS, but with reduced diagnostic capabilities. On non-ACNS clusters, the agent provides DNS, packet drop, and standard Kubernetes networking diagnostics. Hubble flow analysis and Cilium policy diagnostics aren't available.
+> Container Network Optimisation Agent works on clusters without Cilium or ACNS, but with reduced diagnostic capabilities. On non-ACNS clusters, the agent provides DNS, packet drop, and standard Kubernetes networking diagnostics. Hubble flow analysis and Cilium policy diagnostics aren't available.
 
-## Deploy Container Networking Agent
+## Deploy Container Network Optimisation Agent
 
 [!INCLUDE [preview features callout](~/reusable-content/ce-skilling/azure/includes/aks/includes/preview/preview-callout.md)]
 Follow these steps to deploy the agent:
@@ -102,6 +102,9 @@ export OPENAI_SERVICE_NAME="<your-openai-service-name>"
 export OPENAI_DEPLOYMENT_NAME="<your-deployment-name>"        # Name to give the deployment
 export OPENAI_MODEL_NAME="<your-model-name>"                  # e.g. gpt-4o or gpt-5
 export OPENAI_MODEL_VERSION="<your-model-version>"            # e.g. 2024-11-20
+export SKU_CAPACITY="<your-sku-capacity>"                     # e.g. 50, 100,1000. Capacity value of the Sku of Cognitive Services account/deployment.
+
+
 
 az login
 az account set --subscription $SUBSCRIPTION_ID
@@ -157,7 +160,7 @@ az aks get-credentials \
 
 ### Step 3: Create an Azure OpenAI resource and deploy a model
 
-Container Networking Agent uses Azure OpenAI Service to power its AI reasoning. When you describe a networking issue, the agent sends your query and the collected diagnostic evidence to Azure OpenAI for analysis and response generation. In this step, you create an Azure OpenAI resource and deploy a model (for example, GPT-4o or later) that the agent uses at runtime.
+Container Network Optimisation Agent uses Azure OpenAI Service to power its AI reasoning. When you describe a networking issue, the agent sends your query and the collected diagnostic evidence to Azure OpenAI for analysis and response generation. In this step, you create an Azure OpenAI resource and deploy a model (for example, GPT-4o or later) that the agent uses at runtime.
 
 > [!NOTE]
 > If you already have an Azure OpenAI resource with a deployed model, skip the resource and model creation commands below. Instead, set the following environment variables to match your existing resource and continue to the next step:
@@ -218,7 +221,7 @@ az cognitiveservices account deployment create \
     --model-version $OPENAI_MODEL_VERSION \
     --model-format OpenAI \
     --sku-name "GlobalStandard" \
-    --sku-capacity 1000
+    --sku-capacity "$SKU_CAPACITY"
 ```
 
 Retrieve the endpoint URL using the [`az cognitiveservices account show`](/cli/azure/cognitiveservices/account#az-cognitiveservices-account-show) command.
@@ -356,13 +359,13 @@ az identity federated-credential create \
     --audiences "api://AzureADTokenExchange"
 ```
 
-Container Networking Agent uses [AKS workload identity](/azure/aks/workload-identity-overview) to authenticate to Azure OpenAI and other Azure services. At runtime, AKS automatically injects a federated token into the agent pod. The agent exchanges this token for a Microsoft Entra ID access token to call Azure OpenAI. This approach eliminates the need for secrets or connection strings in your cluster.
+Container Network Optimisation Agent uses [AKS workload identity](/azure/aks/workload-identity-overview) to authenticate to Azure OpenAI and other Azure services. At runtime, AKS automatically injects a federated token into the agent pod. The agent exchanges this token for a Microsoft Entra ID access token to call Azure OpenAI. This approach eliminates the need for secrets or connection strings in your cluster.
 
 ### Step 7: Create an App Registration for Entra ID authentication
 
-Create an Entra ID App Registration so users can sign in to Container Networking Agent using Microsoft Entra ID (MSAL) with OAuth2/OIDC. This step is required for production deployments.
+Create an Entra ID App Registration so users can sign in to Container Network Optimisation Agent using Microsoft Entra ID (MSAL) with OAuth2/OIDC. This step is required for production deployments.
 
-Container Networking Agent supports two methods for user sign-in:
+Container Network Optimisation Agent supports two methods for user sign-in:
 
 | Method | Use case |
 |--------|----------|
@@ -454,7 +457,7 @@ az ad app federated-credential list --id $APP_CLIENT_ID --query "[].{name:name, 
 
 ### Step 8: Install the extension
 
-Install the Container Networking Agent AKS extension using the [`az k8s-extension create`](/cli/azure/k8s-extension#az-k8s-extension-create) command. Use the command that matches your cluster configuration.
+Install the Container Network Optimisation Agent AKS extension using the [`az k8s-extension create`](/cli/azure/k8s-extension#az-k8s-extension-create) command. Use the command that matches your cluster configuration.
 
 ```azurecli-interactive
 export TENANT_ID=$(az account show --query tenantId -o tsv)
@@ -470,7 +473,7 @@ az k8s-extension create \
     --cluster-type managedClusters \
     --name containernetworkingagent \
     --extension-type microsoft.containernetworkingagent  \
-    --release-train dev \
+    --release-train stable \
     --auto-upgrade-minor-version false \
     --scope cluster \
     --configuration-settings config.AZURE_CLIENT_ID=$IDENTITY_CLIENT_ID \
@@ -490,7 +493,6 @@ az k8s-extension create \
 **For clusters without ACNS (Hubble disabled):**
 
 ```azurecli-interactive
-
 az k8s-extension create \
     --cluster-name $CLUSTER_NAME \
     --resource-group $RESOURCE_GROUP \
@@ -498,7 +500,7 @@ az k8s-extension create \
     --name containernetworkingagent \
     --extension-type microsoft.containernetworkingagent \
     --scope cluster \
-    --release-train dev \
+    --release-train stable \
     --configuration-settings config.AZURE_CLIENT_ID=$IDENTITY_CLIENT_ID \
     --configuration-settings config.AZURE_TENANT_ID=$TENANT_ID \
     --configuration-settings config.AZURE_SUBSCRIPTION_ID=$SUBSCRIPTION_ID \
@@ -534,7 +536,7 @@ kubectl get serviceaccount container-networking-agent-reader -n kube-system -o y
 
 The annotation `azure.workload.identity/client-id` should match your managed identity client ID.
 
-## Use Container Networking Agent
+## Use Container Network Optimisation Agent
 
 After deployment and validation, access the agent through the web chat interface.
 
@@ -547,6 +549,8 @@ After deployment and validation, access the agent through the web chat interface
    ```
 
 2. Open `http://localhost:8080` in your browser.
+   - You should see the Container Network Optimisation Agent chat interface.
+   - If you face an internal server error, check if federated credentials are correctly configured.
 
 3. Sign in using either simple username login (development) or Microsoft Entra ID (production), depending on your configuration.
 
@@ -600,7 +604,7 @@ Start a new conversation for unrelated issues to keep context fresh.
 
 ## Cluster access and security
 
-Container Networking Agent uses a dedicated service account (`container-networking-agent-reader`) with a read-only ClusterRole in the `kube-system` namespace. The RBAC configuration uses the principle of least privilege:
+Container Network Optimisation Agent uses a dedicated service account (`container-networking-agent-reader`) with a read-only ClusterRole in the `kube-system` namespace. The RBAC configuration uses the principle of least privilege:
 
 - **Read access** to core Kubernetes resources: Pods, Services, Nodes, Namespaces, ConfigMaps, Events, Deployments, ReplicaSets, DaemonSets, StatefulSets, Ingresses, NetworkPolicies, Endpoints, EndpointSlices, PersistentVolumes, and PersistentVolumeClaims.
 - **Read access** to Cilium CRDs: CiliumNetworkPolicies, CiliumEndpoints, CiliumIdentities, CiliumLoadBalancerIPPools, CiliumL2AnnouncementPolicies, and other Cilium resources.
@@ -643,11 +647,11 @@ az k8s-extension delete \
 
 ## Troubleshoot
 
-If you encounter issues deploying, configuring, or using Container Networking Agent, see [Troubleshoot Container Networking Agent on AKS](./troubleshoot-container-networking-agent.md) for detailed guidance on common problems including identity and permission errors, Azure OpenAI connectivity issues, extension installation failures, and more.
+If you encounter issues deploying, configuring, or using Container Network Optimisation Agent, see [Troubleshoot Container Network Optimisation Agent on AKS](./troubleshoot-container-network-optimisation-agent.md) for detailed guidance on common problems including identity and permission errors, Azure OpenAI connectivity issues, extension installation failures, and more.
 
 ## Next steps
 
-- [Troubleshoot Container Networking Agent on AKS](./troubleshoot-container-networking-agent.md)
-- [Container Networking Agent overview](./container-networking-agent-overview.md)
+- [Troubleshoot Container Network Optimisation Agent on AKS](./troubleshoot-container-network-optimisation-agent.md)
+- [Container Network Optimisation Agent overview](./container-network-optimisation-agent-overview.md)
 - [Advanced Container Networking Services overview](/azure/aks/advanced-container-networking-services-overview)
 - [Azure CNI powered by Cilium](/azure/aks/azure-cni-powered-by-cilium)

@@ -1120,14 +1120,14 @@
               href: agentic-cli-for-aks-troubleshoot.md
             - name: Agentic CLI for AKS FAQ
               href: agentic-cli-for-aks-faq.yml
-        - name: Container Networking Agent
+        - name: Container Network Optimization Agent
           items:
             - name: Overview
-              href: container-networking-agent-overview.md
-            - name: Install and use the Container Networking Agent
-              href: how-to-configure-container-networking-agent.md
-            - name: Troubleshoot Container Networking Agent issues
-              href: troubleshoot-container-networking-agent.md
+              href: container-network-optimization-agent-overview.md
+            - name: Install and use the Container Network Optimization Agent
+              href: how-to-configure-container-network-optimization-agent.md
+            - name: Troubleshoot Container Network Optimization Agent issues
+              href: troubleshoot-container-network-optimization-agent.md
         - name: AKS MCP server
           href: aks-model-context-protocol-server.md
         - name: Work with clusters using Copilot
