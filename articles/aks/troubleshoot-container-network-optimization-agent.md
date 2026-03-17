@@ -1,6 +1,6 @@
 ---
-title: Troubleshoot Container Network Optimisation Agent on AKS
-description: Troubleshoot common issues you might encounter when deploying, configuring, or using Container Network Optimisation Agent on Azure Kubernetes Service (AKS).
+title: Troubleshoot Container Network Optimization Agent on AKS
+description: Troubleshoot common issues you might encounter when deploying, configuring, or using Container Network Optimization Agent on Azure Kubernetes Service (AKS).
 author: shaifaligargmsft
 ms.author: shaifaligarg
 ms.date: 03/05/2026
@@ -8,41 +8,11 @@ ms.topic: troubleshooting
 ms.service: azure-kubernetes-service
 ---
 
-# Troubleshoot Container Network Optimisation Agent on AKS
+# Troubleshoot Container Network Optimization Agent on AKS
 
-This article covers common issues you might encounter when deploying, setting up, or using Container Network Optimisation Agent on AKS. Each section follows a **Symptom → Cause → Resolution** format.
+This article covers common issues you might encounter when deploying, setting up, or using Container Network Optimization Agent on AKS. Each section follows a **Symptom → Cause → Resolution** format.
 
-For deployment instructions, see [Deploy and use Container Network Optimisation Agent on AKS](./how-to-configure-container-network-optimisation-agent.md).
-
-## In this article
-
-- [Extension installation fails](#extension-installation-fails)
-- [Identity and permissions errors](#identity-and-permissions-errors)
-- [Azure OpenAI connectivity issues](#azure-openai-connectivity-issues)
-- [App Registration and Entra ID authentication errors](#app-registration-and-entra-id-authentication-errors)
-- [Missing environment variables at startup](#missing-environment-variables-at-startup)
-- [Agent pod not running or crashing](#agent-pod-not-running-or-crashing)
-- [Readiness probe failures](#readiness-probe-failures)
-- [Warmup pool keeps failing](#warmup-pool-keeps-failing)
-- [Hubble commands fail](#hubble-commands-fail)
-- [Chat rate limiting](#chat-rate-limiting)
-- [Chat message sent but no response](#chat-message-sent-but-no-response)
-- [Slow first request](#slow-first-request)
-- [Slow responses for complex diagnostics](#slow-responses-for-complex-diagnostics)
-- [Diagnostic commands time out](#diagnostic-commands-time-out)
-- [Session data lost after pod restart](#session-data-lost-after-pod-restart)
-- [Session expires unexpectedly](#session-expires-unexpectedly)
-- [Chat context appears lost after many exchanges](#chat-context-appears-lost-after-many-exchanges)
-- [Conversation limit reached](#conversation-limit-reached)
-- [Debug DaemonSet persists after a crash](#debug-daemonset-persists-after-a-crash)
-- [Packet drop diagnostic fails](#packet-drop-diagnostic-fails)
-- [DNS diagnostics return incomplete or no results](#dns-diagnostics-return-incomplete-or-no-results)
-- [Agent stops mid-investigation](#agent-stops-mid-investigation)
-- [Workload identity not enabled on the cluster](#workload-identity-not-enabled-on-the-cluster)
-- [Azure OpenAI model not available in the selected region](#azure-openai-model-not-available-in-the-selected-region)
-- [Quick diagnostic commands](#quick-diagnostic-commands)
-
----
+For deployment instructions, see [Deploy and use Container Network Optimization Agent on AKS](./how-to-configure-container-network-optimization-agent.md).
 
 ## Extension installation fails
 
@@ -386,7 +356,7 @@ RuntimeError: Missing required Azure OpenAI environment variable(s): AZURE_OPENA
 
 **Resolution:**
 
-Container Network Optimisation Agent has three rate limiting layers:
+Container Network Optimization Agent has three rate limiting layers:
 
 | Rate limiter | Default | Behavior |
 |--------------|---------|----------|
@@ -434,7 +404,7 @@ Container Network Optimisation Agent has three rate limiting layers:
 
 **Symptom:** The first chat message after deployment or pod restart takes 10-30 seconds to respond.
 
-**Cause:** Container Network Optimisation Agent maintains a pool of pre-warmed agents to reduce latency. After a pod restart, the warmup pool needs time to initialize each agent, which requires MCP plugin startup, Azure credential setup, and AI framework initialization.
+**Cause:** Container Network Optimization Agent maintains a pool of pre-warmed agents to reduce latency. After a pod restart, the warmup pool needs time to initialize each agent, which requires MCP plugin startup, Azure credential setup, and AI framework initialization.
 
 **Resolution:** This is expected behavior. Wait for the `/ready` endpoint to return HTTP 200 before sending requests — that confirms at least one pre-warmed agent is available. Subsequent requests use the pre-warmed pool and respond faster (typically 5-10 seconds for simple queries).
 
@@ -500,7 +470,7 @@ To reduce latency:
 
 **Symptom:** You are logged out without warning during an active session, or your session ends after a period of inactivity even though you were using the extension.
 
-**Cause:** Container Network Optimisation Agent enforces session timeouts for security. Two independent limits apply:
+**Cause:** Container Network Optimization Agent enforces session timeouts for security. Two independent limits apply:
 
 | Timeout type | Default | Behavior |
 |--------------|---------|----------|
@@ -518,7 +488,7 @@ To reduce latency:
 
 **Symptom:** After approximately 15 exchanges, the agent seems to forget earlier parts of the conversation or doesn't reference context from earlier in the session.
 
-**Cause:** Container Network Optimisation Agent summarizes conversation history to stay within the Azure OpenAI token limit. When the context window reaches approximately 20 messages, older messages are replaced by an automatically generated summary. The most recent messages and the summary are retained and passed to the model.
+**Cause:** Container Network Optimization Agent summarizes conversation history to stay within the Azure OpenAI token limit. When the context window reaches approximately 20 messages, older messages are replaced by an automatically generated summary. The most recent messages and the summary are retained and passed to the model.
 
 **Resolution:** This is expected behavior. The summarization preserves key diagnostic context while managing Azure OpenAI token limits. If you need to reference something from much earlier in the conversation:
 - Repeat the relevant context: "Earlier you found X — can you investigate further?"
@@ -543,7 +513,7 @@ To reduce latency:
 
 **Symptom:** The `retina-debug-daemonset` DaemonSet remains in the `kube-system` namespace after a diagnostic session.
 
-**Cause:** Container Network Optimisation Agent deploys a lightweight debug DaemonSet during packet drop diagnostics. If the agent pod crashes unexpectedly during this diagnostic, the cleanup step doesn't run.
+**Cause:** Container Network Optimization Agent deploys a lightweight debug DaemonSet during packet drop diagnostics. If the agent pod crashes unexpectedly during this diagnostic, the cleanup step doesn't run.
 
 **Resolution:** Manually delete the DaemonSet:
 
@@ -730,7 +700,7 @@ kubectl delete pod -n kube-system -l app=container-networking-agent    # Force p
 
 ## Next steps
 
-- [Deploy and use Container Network Optimisation Agent on AKS](./how-to-configure-container-network-optimisation-agent.md)
-- [Container Network Optimisation Agent overview](./container-network-optimisation-agent-overview.md)
+- [Deploy and use Container Network Optimization Agent on AKS](./how-to-configure-container-network-optimization-agent.md)
+- [Container Network Optimization Agent overview](./container-network-optimization-agent-overview.md)
 - [Advanced Container Networking Services overview](/azure/aks/advanced-container-networking-services-overview)
 - [Azure CNI powered by Cilium](/azure/aks/azure-cni-powered-by-cilium)
