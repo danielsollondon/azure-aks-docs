@@ -56,7 +56,7 @@ Authentication decisions are based on workload identity rather than network loca
 - Identity remains consistent across rescheduling and scaling.
 - Trust isn't dependent on IP addressing or network topology.
 
-:::image type="content" source="./media/advanced-container-networking-services/mtls-authentication-diagram.png" alt-text="Diagram of mtls authentication process." lightbox="./media/advanced-container-networking-services/mtls-authentication-diagram.png":::
+:::image type="content" source="./media/advanced-container-networking-services/mutual-tls-authentication-diagram.png" alt-text="Diagram of mutual-tls authentication process." lightbox="./media/advanced-container-networking-services/mutual-tls-authentication-diagram.png":::
 
 ## Encryption flow
 

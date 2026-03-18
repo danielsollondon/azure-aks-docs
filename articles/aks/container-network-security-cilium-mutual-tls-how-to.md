@@ -147,7 +147,7 @@ kubectl exec -n kube-system ds/cilium -- cilium-dbg statedb dump | jq '.["mtls-e
 ```
 The results of this query should show which namespaces have been successfully processed by the enrollment reconciler.
 
-4.Verify pods are enrolled in SPIRE
+3. Verify pods are enrolled in SPIRE
 
 Exec into the SPIRE Server container and list entries:
 
@@ -164,9 +164,9 @@ Look for entries matching the SPIFFE format:
 spiffe://<trust-domain>/ns/<namespace>/sa/<serviceaccount>
 ```
 
-5. Verify pod enrollment in ztunnel
+4. Verify pod enrollment in ztunnel
 
-ztunnel exposes a local admin endpoint that allows inspecting its active configuration, including enrolled workloads.
+Ztunnel exposes a local admin endpoint that allows inspecting its active configuration, including enrolled workloads.
 
 Select a ztunnel pod.
 
