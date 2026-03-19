@@ -248,8 +248,8 @@ This configuration requires bring-your-own networking (via [Kubenet][byo-vnet-ku
     ```
 
    > [!Important]
-   > To ensure zone-redundancy, it is recommended to deploy a StandardV2 NAT gateway resource, which spans across multiple availability zones in a region. This ensures continued outbound connectivity even if a single zone fails. For more details on StandardV2 NAT gateway and its benefits, see [StandardV2 NAT Gateway](azure/nat-gateway/nat-overview#standardv2-nat-gateway). 
-   > By comparison, a Standard NAT gateway resource provides resiliency only within the availability zone in which it is deployed.
+   > To ensure zone-redundancy, it's recommended to deploy a StandardV2 NAT gateway resource, which spans across multiple availability zones in a region. This ensures continued outbound connectivity even if a single zone fails. For more details on StandardV2 NAT gateway and its benefits, see [StandardV2 NAT Gateway](/azure/nat-gateway/nat-overview#standardv2-nat-gateway). 
+   > By comparison, a Standard NAT gateway resource provides resiliency only within the availability zone in which it's deployed.
 
 
 5. Create a virtual network using the [`az network vnet create`][az-network-vnet-create] command.
