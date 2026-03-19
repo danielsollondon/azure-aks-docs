@@ -118,12 +118,20 @@ Create the necessary Role and RoleBinding for the service account with read acce
 
 ### Verify the service account resources
 
-Verify that the resources were created successfully:
+Verify that the resources were created successfully. The commands depend on which access option you chose:
+
+**If you chose cluster-wide read access:**
 
 ```bash
 kubectl get serviceaccount "${SERVICE_ACCOUNT_NAME}" -n "${SERVICE_ACCOUNT_NAMESPACE}"
-kubectl get role aks-mcp-role -n "${SERVICE_ACCOUNT_NAMESPACE}"
-kubectl get rolebinding aks-mcp-rolebinding -n "${SERVICE_ACCOUNT_NAMESPACE}"
+kubectl get clusterrolebinding aks-mcp-view-rolebinding
+```
+
+**If you chose namespace-scoped read access:**
+
+```bash
+kubectl get serviceaccount "${SERVICE_ACCOUNT_NAME}" -n "${SERVICE_ACCOUNT_NAMESPACE}"
+kubectl get rolebinding aks-mcp-view-rolebinding -n "${SERVICE_ACCOUNT_NAMESPACE}"
 ```
 
 ## Step 2: Workload identity setup (Optional)
