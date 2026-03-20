@@ -18,6 +18,9 @@ When you create an Application Network resource, a dedicated, fully managed cont
 > [!IMPORTANT]
 > Azure Kubernetes Application Network manages only service network-related components and policies. It doesn't manage or upgrade your AKS cluster, Kubernetes version, or node images.
 
+> [!IMPORTANT]
+> Azure Kubernetes Application Network doesn't store any customer data.
+
 ## Core capabilities
 
 Application Network delivers a streamlined approach to zero-trust networking in AKS. Key capabilities include:
