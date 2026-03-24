@@ -1,7 +1,7 @@
 ---
 title: "Update Kubernetes and node images across multiple member clusters"
 description: This article describes the concept of update orchestration across multiple clusters.
-ms.date: 03/18/2026
+ms.date: 03/24/2026
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager
@@ -119,6 +119,13 @@ In an auto-upgrade profile you can configure:
 - an `UpdateStrategy` which configures the sequence in which the clusters are upgraded. If a strategy isn't supplied, clusters are updated one by one sequentially.
 - the `NodeImageSelectionType` (Latest, Consistent) to specify how the node image is selected when upgrading the Kubernetes version.
 
+> [!NOTE]
+> When you create an auto-upgrade profile, it may be some time (days or weeks) before a new Kubernetes or node image release from AKS causes auto-upgrade to create and execute an update run. 
+>
+> You can generate an update run from an auto-upgrade profile at any time using the [`az fleet autoupgradeprofile generate-update-run`][az-fleet-updaterun-generate] command. The resulting update run is based on the current AKS-published Kubernetes or node image version. 
+> 
+> For more information on creating an on-demand update run from an auto-upgrade profile, see [generate an update run from an auto-upgrade profile](./update-orchestration.md#generate-an-update-run-from-an-auto-upgrade-profile).
+
 ## Understanding node image upgrades and snapshots
 
 When a member cluster has agent pools that were [created from a node pool snapshot](/azure/aks/node-pool-snapshot), the outcome of the node image upgrade depends on the Fleet Manager Update Run node image selection.
@@ -126,7 +133,7 @@ When a member cluster has agent pools that were [created from a node pool snapsh
 | Node image selection | Upgrade outcome |
 |----------------------|---------------------------------------------|
 | `Latest`             | Follows standard AKS upgrade behavior. The agent pool keeps its reference to the snapshot (`creationData`), and the node image isn't modified. |
-| `Consistent`        | The node image is upgraded to the version determined by Fleet Manager. The reference to the snapshot (`creationData`) is removed from the agent pool. |
+| `Consistent`         | The node image is upgraded to the version determined by Fleet Manager. The reference to the snapshot (`creationData`) is removed from the agent pool. |
 
 ### Stable channel
 
@@ -266,3 +273,4 @@ Auto-upgrade doesn't move clusters between minor Kubernetes versions when there'
 <!-- INTERNAL LINKS -->
 [supported-kubernetes-versions]: /azure/aks/supported-kubernetes-versions
 [aks-maintenance-windows]: /azure/aks/planned-maintenance
+[az-fleet-updaterun-generate]: /cli/azure/fleet/autoupgradeprofile#az-fleet-autoupgradeprofile-generate-update-run
