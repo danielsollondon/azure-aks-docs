@@ -7,6 +7,7 @@ ms.date: 2/12/2026
 ms.author: wilsondarko
 author: wdarko1
 ai-usage: ai-assisted
+ai-usage: ai-assisted
 
 #Customer intent: As a cluster operator or developer, I want to automatically provision and manage the optimal VM configuration for my AKS workloads, so that I can efficiently scale my cluster while minimizing resource costs and complexities.
 
@@ -55,7 +56,7 @@ The following table maps Cluster Autoscaler profile settings to Node Auto Provis
 | `ok-total-unready-count` / `max-total-unready-percentage` | Limits unready nodes during autoscaling | **CLI:** <br>`az aks update --cluster-autoscaler-profile ok-total-unready-count=3`<br> | `budgets` | Can enforce disruption limits during maintenance windows |  **YAML:** <br> `disruption:` <br> `  budgets:`<br>`    - nodes: "20%"` |
 
 
->[!NOTE]
+> [!NOTE]
 > Unlike cluster autoscaler, NAP doesn't use Azure CLI commands to manage node behavior, so all decision making for NAP-managed nodes is determined by the CRDs.
 > For more on configuring your cluster specifications for NAP, visit our [NodePool documentation](./node-auto-provisioning-node-pools.md) and [AKSNodeClass documentation](./node-auto-provisioning-aksnodeclass.md).
 
@@ -147,6 +148,10 @@ spec:
       labels:
         intent: apps
     spec:
+      nodeClassRef:
+        name: default
+        group: karpenter.azure.com
+        kind: AKSNodeClass
       requirements:
         - key: karpenter.sh/capacity-type
           operator: In
