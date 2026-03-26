@@ -45,7 +45,7 @@ In this example, we use the [HuggingFaceTB SmolLM2-1.7B-Instruct](https://huggin
 1. Navigate to the `kaito` directory and copy the [sample deployment YAML](https://github.com/kaito-project/kaito/tree/main/examples/custom-model-integration/custom-model-deployment.yaml) manifest. Replace the default values in the following fields with your model's requirements:
 
    - `instanceType`: The VM size for your inference service deployment. For larger model sizes you can choose a VM in the [`Standard_NCads_A100_v4`](/azure/virtual-machines/sizes/gpu-accelerated/nca100v4-series) family with higher memory capacity.
-   - `--MODEL_ID`: Your model's specific HuggingFace identifier, which can be found after `https://huggingface.co/` in the model card URL.
+   - `MODEL_ID`: Your model's specific HuggingFace identifier, which can be found after `https://huggingface.co/` in the model card URL.
    - `"--torch_dtype"`: Set to `"float16"` for compatibility with V100 GPUs. For A100, H100 or newer GPUs, use `"bfloat16"`.
    - For this example, we use `Standard_NC24ads_A100_v4` as the instance type and the [HuggingFaceTB SmolLM2-1.7B-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct) model.
 
