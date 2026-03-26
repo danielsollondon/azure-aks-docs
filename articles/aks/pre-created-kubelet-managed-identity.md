@@ -114,6 +114,7 @@ az aks create \
 A successful AKS cluster creation using a kubelet managed identity should result in output similar to the following:
 
 ```output
+...
     "identity": {
     "principalId": null,
     "tenantId": null,
@@ -132,6 +133,7 @@ A successful AKS cluster creation using a kubelet managed identity should result
         "resourceId": "/subscriptions/<subscription-id>/resourcegroups/<resource-group-name>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<kubelet-identity-name>"
     }
     },
+...
 ```
 
 ## Update an existing cluster to use a kubelet managed identity
@@ -153,7 +155,6 @@ To update an existing cluster to use the kubelet managed identity, first get the
     If your cluster is using a managed identity, the output shows `clientId` with a value of **msi**. A cluster using a service principal shows an object ID. For example:
 
     ```output
-    # The cluster is using a managed identity.
     {
       "clientId": "msi"
     }
@@ -194,6 +195,7 @@ To update an existing cluster to use the kubelet managed identity, first get the
     Your output for a successful cluster update using your own kubelet managed identity should resemble the following example output:
 
     ```output
+    ...
       "identity": {
         "principalId": null,
         "tenantId": null,
@@ -212,6 +214,7 @@ To update an existing cluster to use the kubelet managed identity, first get the
           "resourceId": "/subscriptions/<subscription-id>/resourcegroups/<resource-group-name>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<kubelet-identity-name>"
         }
       },
+    ...
     ```
 
 ## Get the properties of the kubelet managed identity

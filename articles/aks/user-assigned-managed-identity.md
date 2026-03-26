@@ -136,6 +136,7 @@ az aks update \
 The output for a successful cluster update to use a user-assigned managed identity should resemble the following example output:
 
 ```output
+...
     "identity": {
     "principalId": null,
     "tenantId": null,
@@ -147,6 +148,7 @@ The output for a successful cluster update to use a user-assigned managed identi
         }
     }
     },
+...
 ```
 
 > [!NOTE]
