@@ -189,7 +189,7 @@ You must remove all members before you can delete the Azure Kubernetes Applicati
 ### Remove an Azure Kubernetes Application Network member
 
 > [!NOTE]
-> Before you remove a member, remove Istio labels such as `istio.io/use-waypoint`, `istio.io/use-waypoint-namespace`, and `istio.io/dataplane-mode` from resources so that the Istio-related `iptables` or `nftables` rules are cleaned up.
+> Before removing a member, you must remove your workloads from the ambient data plane by removing Istio labels such as `istio.io/use-waypoint`, `istio.io/use-waypoint-namespace`, and `istio.io/dataplane-mode` from resources.
 
 1. Remove a member from Azure Kubernetes Application Network using the [`az appnet member remove`][az-appnet-member-remove] command.
 
