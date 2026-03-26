@@ -42,10 +42,10 @@ In this example, we use the [HuggingFaceTB SmolLM2-1.7B-Instruct](https://huggin
 
 ## Deploy your model inferencing workload using the KAITO workspace template
 
-1. Navigate to the `kaito` directory and copy the [sample deployment YAML](https://github.com/kaito-project/kaito/tree/main/examples/custom-model-integration/custom-model-deployment.yaml) manifest. Replace the default values in the following fields with your model's requirements. For this example, we specify the **bloom-1b7** HuggingFace model ID for [BigScience Bloom-1B7](https://huggingface.co/bigscience/bloom-1b7) model:
+1. Navigate to the `kaito` directory and copy the [sample deployment YAML](https://github.com/kaito-project/kaito/tree/main/examples/custom-model-integration/custom-model-deployment.yaml) manifest. Replace the default values in the following fields with your model's requirements. For this example, we specify the **HuggingFaceTB/SmolLM2-1.7B-Instruct** HuggingFace model ID for the [HuggingFaceTB SmolLM2-1.7B-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct) model:
 
    - `instanceType`: The minimum VM size for this inference service deployment is `Standard_NC24ads_A100_v4`. For larger model sizes you can choose a VM in the [`Standard_NCads_A100_v4`](/azure/virtual-machines/sizes/gpu-accelerated/nca100v4-series) family with higher memory capacity.
-   - `MODEL_ID`: Replace with your model's specific HuggingFace identifier, which can be found after `https://huggingface.co/` in the model card URL.
+   - `--pretrained_model_name_or_path`: Replace with your model's specific HuggingFace identifier, which can be found after `https://huggingface.co/` in the model card URL.
    - `"--torch_dtype"`: Set to `"float16"` for compatibility with V100 GPUs. For A100, H100 or newer GPUs, use `"bfloat16"`.
    - (Optional) `HF_TOKEN`: Specify the values in this section only if you are deploying a private or gated Hugging Face model for inference.
 
@@ -141,25 +141,39 @@ In this example, we use the [HuggingFaceTB SmolLM2-1.7B-Instruct](https://huggin
     kubectl get workspace workspace-custom-llm -w
     ```
 
-    > [!NOTE]  
-    > Note that machine readiness can take *up to 10 minutes*, and workspace readiness *up to 20 minutes*.
+    > [!NOTE]
+    > Note that machine readiness can take *up to 10 minutes*, and workspace readiness *up to 20 minutes*. Proceed to the next step only once the workspace status shows `Ready`.
 
-2. Check your language model inference service and get the service IP address using the `kubectl get svc` command.
+2. Once the workspace is ready, port forward the inference service to your local machine in a separate terminal.
 
     ```bash
-    export SERVICE_IP=$(kubectl get svc workspace-custom-llm -o jsonpath='{.spec.clusterIP}')
+    kubectl port-forward svc/workspace-custom-llm 5000:5000
     ```
 
-3. Test your custom model inference service with a sample input of your choice using the [OpenAI API format](https://platform.openai.com/docs/api-reference/chat):
+3. Install the OpenAI Python client.
 
     ```bash
-    kubectl run -it --rm --restart=Never curl --image=curlimages/curl -- curl -X POST http://$SERVICE_IP/v1/chat/completions \
-      -H "Content-Type: application/json" \
-      -d '{
-        "model": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
-        "messages": [{"role": "user", "content": "What sport should I play in rainy weather?"}],
-        "max_tokens": 20
-      }'
+    pip install openai
+    ```
+
+4. Save the following script as `test_inference.py` and run it using `python test_inference.py`:
+
+    ```python
+    from openai import OpenAI
+
+    client = OpenAI(
+        base_url="http://127.0.0.1:5000/v1",
+        api_key="unused",
+    )
+
+    response = client.chat.completions.create(
+        model="workspace-custom-llm",
+        messages=[{"role": "user", "content": "What sport should I play in rainy weather?"}],
+        max_tokens=400,
+        stream=True,
+    )
+
+    print("".join(chunk.choices[0].delta.content or "" for chunk in response))
     ```
 
 ## Clean up resources
