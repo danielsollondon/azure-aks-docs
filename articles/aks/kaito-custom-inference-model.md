@@ -3,9 +3,10 @@ title: Onboard custom models for inferencing with the AI toolchain operator (KAI
 description: Learn how to onboard custom models for inferencing with the AI toolchain operator (KAITO) on AKS.
 ms.topic: how-to
 ms.custom: azure-kubernetes-service
-ms.date: 10/16/2025
-author: sachidesai
-ms.author: sachidesai
+ms.date: 03/27/2026
+author: schaffererin
+ms.author: schaffererin
+
 # Customer intent: As an AI engineer, I want to onboard custom models for inferencing on Azure Kubernetes Service using the AI toolchain operator, so that I can efficiently deploy and manage AI workloads without having to maintain custom images.
 ---
 
@@ -21,7 +22,7 @@ In this article, you learn how to onboard a sample HuggingFace model for inferen
 - An AKS cluster with the AI toolchain operator add-on enabled. For more information, see [Enable KAITO on an AKS cluster](./ai-toolchain-operator.md#enable-the-ai-toolchain-operator-add-on-on-an-aks-cluster).
 - This example deployment requires quota for the `Standard_NCads_A100_v4` virtual machine (VM) family in your Azure subscription. If you don't have quota for this VM family, please [request a quota increase](/azure/quotas/quickstart-increase-quota-portal).
 
-    > [!NOTE]  
+    > [!NOTE]
     > Currently, only the HuggingFace runtime supports inference with the KAITO custom model deployment template.
 
 ## Choose an open-source language model from HuggingFace
