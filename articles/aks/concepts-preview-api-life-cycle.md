@@ -69,6 +69,7 @@ az monitor activity-log list --offset 30d --max-events 10000 --namespace microso
 
 ## Completed deprecations
 
+The following table lists recently completed preview API deprecations. Older completed deprecations are intentionally removed from this page and aren't shown here.
 | API version        | Announce Date     | Deprecation Date  |
 |--------------------|-------------------|-------------------|
 | 2023-03-02-preview | Oct 21, 2024      | February 3, 2025  |
