@@ -48,15 +48,15 @@
           items:
           - name: Introduction to resource placement
             href: concepts-resource-placement.md
-          - name: Defining a placement rollout strategy
+          - name: Controlling placement rollout order
             href: concepts-rollout-strategy.md       
-          - name: Placement strategy and resource snapshots
+          - name: Placement rollouts and resource snapshots
             href: concepts-placement-snapshots.md
-          - name: Taking over existing resouurces
+          - name: Taking over existing resources
             href: concepts-placement-takeover.md
           - name: Detecting and managing resource drift
             href: concepts-placement-drift.md 
-          - name: Controlling resource eviction and disruption
+          - name: Controlling eviction and disruption
             href: concepts-eviction-disruption.md
         - name: Automated deployments overview
           href: concepts-automated-deployments.md 
