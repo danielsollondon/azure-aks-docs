@@ -42,24 +42,20 @@
       href: concepts-fleet-managed-namespace.md    
     - name: Multi-cluster resource management
       items:
-        - name: Multi-cluster resource management overview
-          href: concepts-multi-cluster-resource-management.md
-        - name: Managing resources using cluster resource placement
-          items:
-          - name: Introduction to resource placement
-            href: concepts-resource-placement.md
-          - name: Controlling placement rollout order
-            href: concepts-rollout-strategy.md       
-          - name: Placement rollouts and resource snapshots
-            href: concepts-placement-snapshots.md
-          - name: Taking over existing resources
-            href: concepts-placement-takeover.md
-          - name: Detecting and managing resource drift
-            href: concepts-placement-drift.md 
-          - name: Controlling eviction and disruption
-            href: concepts-eviction-disruption.md
-        - name: Automated deployments overview
-          href: concepts-automated-deployments.md 
+        - name: Introduction to resource placement
+          href: concepts-resource-placement.md
+        - name: Controlling placement rollout order
+          href: concepts-rollout-strategy.md       
+        - name: Placement rollouts and resource snapshots
+          href: concepts-placement-snapshots.md
+        - name: Taking over existing resources
+          href: concepts-placement-takeover.md
+        - name: Detecting and managing resource drift
+          href: concepts-placement-drift.md 
+        - name: Controlling eviction and disruption
+          href: concepts-eviction-disruption.md
+      - name: Automated deployments overview
+        href: concepts-automated-deployments.md 
     - name: Multi-cluster networking 
       items:
         - name: Multi-cluster networking overview

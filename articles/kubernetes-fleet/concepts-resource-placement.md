@@ -98,9 +98,53 @@ In multi-cluster environments, workloads often consist of both cluster-scoped an
 
 A placement policy, regardless of scope (cluster or namespace) consists of the following components:
 
-- **Resource Selectors**: which resources to include via `resourceSelectors`.
-- **Placement Policy**: define how to pick clusters via `placeType` using one of `PickAll`, `PickFixed`, or `PickN` strategies.
-- **Rollout Strategy**: control how resources rollout across selected clusters via a `strategy`.
+- **Resource Selectors**: select the resources to include via `resourceSelectors`.
+- **Placement Policy**: define how to pick clusters via `placeType` using one of `PickAll`, `PickFixed`, or `PickN` types.
+- **Rollout Strategy**: control how resources rollout across selected clusters by including an optional `strategy`.
+
+:::zone target="docs" pivot="cluster-scope"
+
+```yaml
+apiVersion: placement.kubernetes-fleet.io/v1
+kind: ClusterResourcePlacement
+metadata:
+  name: namespace-only-crp
+spec:
+  resourceSelectors:
+    - group: ""
+      kind: Namespace
+      name: my-app
+      version: v1
+  policy:
+    placementType: PickAll   
+```
+
+:::zone-end
+
+:::zone target="docs" pivot="namespace-scope"
+
+```yaml
+apiVersion: placement.kubernetes-fleet.io/v1
+kind: ResourcePlacement
+metadata:
+  name: app-configs-rp
+  namespace: my-app
+spec:
+  resourceSelectors:
+    - group: ""
+      kind: ConfigMap
+      version: v1
+      labelSelector:
+        matchLabels:
+          app: my-application
+  policy:
+    placementType: PickFixed
+    clusterNames:
+    - cluster1
+    - cluster2
+```
+
+:::zone-end
 
 ## Resource selection
 
