@@ -41,8 +41,8 @@
       "redirect_document_id": false
     },
     {
-      "source_path_from_root": "/articles/kubernetes-fleet/concepts-resource-placement.md",
-      "redirect_url": "/azure/kubernetes-fleet/concepts-resource-propagation",
+      "source_path_from_root": "/articles/kubernetes-fleet/concepts-resource-propagation.md",
+      "redirect_url": "/azure/kubernetes-fleet/concepts-resource-placement",
       "redirect_document_id": false
     }
   ]
