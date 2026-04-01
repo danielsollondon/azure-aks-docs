@@ -39,6 +39,11 @@ Fleet Manager's resource placement capability is based on the [KubeFleet CNCF pr
 
 Use a ClusterResourcePlacement (CRP) to distribute a given set of cluster-scoped resource or entire namespaces from the Fleet Manager hub cluster onto one or more member cluster.
 
+**Key characteristics:**
+
+- **Cluster-scoped**: selects cluster-scoped resources or namespaces.
+- **Declarative**: Uses the same placement policies as `ResourcePlacement` for consistent behavior.
+
 With CRP, you can:
 
 * Select which Kubernetes resources to distribute. These can be cluster-scoped Kubernetes resources defined using [Kubernetes Group Version Kind (GVK)](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#api-groups) references, or a namespace, which distributes the namespace and all its resources.
@@ -62,16 +67,10 @@ Use a ResourcePlacement (RP) to distribute a given set of resources within a spe
 **Key characteristics:**
 
 - **Namespace-scoped**: Both `ResourcePlacement` and the resources it selects exist within the same namespace.
-- **Selective**: selects specific resources within a namespace by type, name, or labels rather than entire namespaces.
+- **Selective**: selects specific resources within the namespace by type, name, or labels rather than entire namespaces.
 - **Declarative**: Uses the same placement policies as `ClusterResourcePlacement` for consistent behavior.
 
-A `ResourcePlacement` consists of three core components:
-
-- **Resource Selectors**: Define which namespace-scoped resources to include.
-- **Placement Policy**: Determine target clusters using `PickAll`, `PickFixed`, or `PickN` strategies.
-- **Rollout Strategy**: Control how changes propagate across selected clusters.
-
-## When to use ResourcePlacement
+### When to use ResourcePlacement
 
 `ResourcePlacement` is ideal for scenarios requiring granular control over namespace-scoped resources:
 
@@ -104,6 +103,8 @@ A placement policy, regardless of scope (cluster or namespace) consists of the f
 
 :::zone target="docs" pivot="cluster-scope"
 
+This sample ClusterResourcePlacement (CRP) places the namespace `my-app` onto all clusters in the fleet.
+
 ```yaml
 apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourcePlacement
@@ -122,6 +123,8 @@ spec:
 :::zone-end
 
 :::zone target="docs" pivot="namespace-scope"
+
+This sample ResourcePlacement (RP) places the ConfigMap labeled `app:my-application` in the namespace `my-app` into the matching namespace on the two named clusters.
 
 ```yaml
 apiVersion: placement.kubernetes-fleet.io/v1
