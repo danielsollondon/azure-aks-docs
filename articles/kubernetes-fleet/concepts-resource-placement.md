@@ -93,7 +93,7 @@ In multi-cluster environments, workloads often consist of both cluster-scoped an
 
 :::zone-end
 
-## Placement policy key components
+## Placement policy components
 
 A placement policy, regardless of scope (cluster or namespace) consists of the following components:
 
@@ -103,7 +103,7 @@ A placement policy, regardless of scope (cluster or namespace) consists of the f
 
 :::zone target="docs" pivot="cluster-scope"
 
-This sample ClusterResourcePlacement (CRP) places the namespace `my-app` onto all clusters in the fleet.
+This sample ClusterResourcePlacement (CRP) places the namespace `my-app` onto all clusters in the fleet. As no explicit strategy is defined, a `RollingUpdate` is used.
 
 ```yaml
 apiVersion: placement.kubernetes-fleet.io/v1
@@ -124,7 +124,7 @@ spec:
 
 :::zone target="docs" pivot="namespace-scope"
 
-This sample ResourcePlacement (RP) places the ConfigMap labeled `app:my-application` in the namespace `my-app` into the matching namespace on the two named clusters.
+This sample ResourcePlacement (RP) places the ConfigMap labeled `app=my-application` in the namespace `my-app` into the matching namespace on the two named clusters.  As no explicit strategy is defined, a `RollingUpdate` is used.
 
 ```yaml
 apiVersion: placement.kubernetes-fleet.io/v1
@@ -149,7 +149,7 @@ spec:
 
 :::zone-end
 
-## Resource selection
+### Resource selection
 
 Select resources using one or more `resourceSelectors` in a placement. Each resource selector can specify:
 
@@ -159,7 +159,7 @@ Select resources using one or more `resourceSelectors` in a placement. Each reso
 
 :::zone target="docs" pivot="cluster-scope"
 
-### Namespace selection scope (preview)
+#### Namespace selection scope (preview)
 
 When using CRP to select an entire namespace, you can use the `selectionScope` field to control whether to include all the child resources in the namespace, or just place an empty namespace.
 
@@ -191,7 +191,7 @@ This approach enables a workflow where platform administrators use `ClusterResou
 
 :::zone-end
 
-## Placement policy types
+### Placement policy types
 
 The following placement policy types are available for controlling the how clusters are selected by Fleet Manager resource placement:
 
@@ -199,7 +199,7 @@ The following placement policy types are available for controlling the how clust
 * **[PickAll](#pickall-placement-type)** places the resource onto all member clusters, or all member clusters that meet a criteria. This policy is useful for placing infrastructure workloads, like cluster monitoring or reporting applications.
 * **[PickN](#pickn-placement-type)** is the most flexible placement option and allows for selection of clusters based on affinity or topology spread constraints and is useful when spreading workloads across multiple appropriate clusters to ensure availability is desired.
 
-### PickFixed placement type
+#### PickFixed placement type
 
 If you want to deploy a workload to a known set of member clusters, you can use a `PickFixed` placement policy to select the clusters by name.
 
@@ -225,7 +225,7 @@ spec:
       version: v1
 ```
 
-### PickAll placement type
+#### PickAll placement type
 
 You can use a `PickAll` placement type to deploy a workload across all member clusters in the fleet or to a subset of clusters that match criteria you set.
 
@@ -257,7 +257,7 @@ spec:
       version: v1
 ```
 
-### PickN placement type
+#### PickN placement type
 
 The `PickN` placement type is the most flexible option and allows for placement of resources into a configurable number of clusters based on both affinities and topology spread constraints.
 
@@ -268,7 +268,7 @@ When creating this type of placement the following cluster affinity types can be
 
 You can set both required and preferred affinities. Required affinities prevent placement to clusters that don't match, and preferred affinities provide ordering of valid clusters.
 
-#### `PickN` with affinities
+##### `PickN` with affinities
 
 Using affinities with a `PickN` placement policy functions similarly to using affinities with pod scheduling. 
 
@@ -300,7 +300,7 @@ spec:
                       critical-allowed: "true"
 ```
 
-#### `PickN` with topology spread constraints
+##### `PickN` with topology spread constraints
 
 You can use topology spread constraints to force the division of the cluster placements across topology boundaries to satisfy availability requirements. For example, use these constraints to split placements across regions or update rings. You can also configure topology spread constraints to prevent scheduling if the constraint can't be met (`whenUnsatisfiable: DoNotSchedule`) or schedule as best possible (`whenUnsatisfiable: ScheduleAnyway`).
 
@@ -327,7 +327,7 @@ spec:
 
 For more information, see the [KubeFleet documentation on topology spread constraints][crp-topo].
 
-## Placement policy options
+### Placement policy options
 
 The table summarizes the available scheduling policy fields for each placement type.
 
