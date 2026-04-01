@@ -92,6 +92,14 @@ In multi-cluster environments, workloads often consist of both cluster-scoped an
 
 :::zone-end
 
+## Placement policy key components
+
+A placement policy, regardless of scope (cluster or namespace) consists of the following components:
+
+- **Resource Selectors**: which resources to include via `resourceSelectors`.
+- **Placement Policy**: define how to pick clusters via `placeType` using one of `PickAll`, `PickFixed`, or `PickN` strategies.
+- **Rollout Strategy**: control how resources rollout across selected clusters via a `strategy`.
+
 ## Resource selection
 
 Select resources using one or more `resourceSelectors` in a placement. Each resource selector can specify:
@@ -104,10 +112,10 @@ Select resources using one or more `resourceSelectors` in a placement. Each reso
 
 ### Namespace selection scope (preview)
 
-When using CRP to select an entire namespace, you can use the `selectionScope` field to control whether to include all the child resources in the namespace.
+When using CRP to select an entire namespace, you can use the `selectionScope` field to control whether to include all the child resources in the namespace, or just place an empty namespace.
 
-* **Default behavior** (when `selectionScope` is not specified): Propagates the namespace and all resources within it.
-* **`NamespaceOnly`**: Propagates only the namespace object itself, without any resources within the namespace. This is useful when you want to establish namespaces across clusters while managing individual resources separately using [`ResourcePlacement`](./concepts-namespace-scoped-resource-propagation.md).
+* **Default behavior** (when `selectionScope` is not specified): distributes the namespace and all resources within it.
+* **`NamespaceOnly`**: distributes only the namespace resource, without any resources within the namespace. This is useful when you want to establish namespaces across clusters while managing individual resources separately using [`ResourcePlacement`](./concepts-namespace-scoped-resource-propagation.md).
 
 > [!IMPORTANT]
 > The `selectionScope` field is available in the `placement.kubernetes-fleet.io/v1beta1` API version as a preview feature. It is not available in the `placement.kubernetes-fleet.io/v1` API.
@@ -703,6 +711,8 @@ While CRP assumes that namespaces represent application boundaries, real-world u
 - **Granular override capabilities**: Teams can customize resource configurations per cluster without affecting other applications in the namespace.
 
 This granular approach ensures that `ResourcePlacement` can adapt to diverse organizational structures and workload patterns while maintaining the simplicity and power of the Fleet scheduling framework.
+
+:::zone-end
 
 ## Key differences between ResourcePlacement and ClusterResourcePlacement
 
