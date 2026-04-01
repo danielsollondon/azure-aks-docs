@@ -14,7 +14,7 @@ zone_pivot_groups: cluster-namespace-scope
 
 **Applies to** :heavy_check_mark: Fleet Manager with hub cluster
 
-Managing Kubernetes resources across multiple clusters presents significant challenges for both platform administrators and application developers. As organizations scale their Kubernetes infrastructure beyond a single cluster, they often encounter complexities related to resource distribution, consistency maintenance, and manual management overhead. The traditional approach of managing each cluster independently creates operational silos that become increasingly difficult to maintain as the fleet size grows.
+Managing Kubernetes resources across multiple clusters presents significant challenges for both platform administrators and application developers. As organizations scale their Kubernetes infrastructure beyond a single cluster, they often encounter complexities related to resource distribution, consistency, and manual management overhead. The traditional approach of managing each cluster independently creates operational silos that become increasingly difficult to maintain as the fleet size grows.
 
 Platform administrators often need to deploy Kubernetes resources onto multiple clusters for various reasons, including:
 
@@ -27,11 +27,21 @@ Application developers often need to deploy Kubernetes resources onto multiple c
 * Deploying a shopping cart application into two paired regions for customers to continue to shop during a single region outage.
 * Deploying a batch compute application into clusters with inexpensive spot node pools available.
 
-It's tedious and potentially error-prone to create, update, and track these Kubernetes resources across multiple clusters manually. 
+It's tedious and potentially error-prone to create, update, and track Kubernetes resources across multiple clusters manually. 
 
-In this article we explore how multi-cluster users can use Fleet Manager's intelligent resource placement capability to place cluster and namespace-scoped Kubernetes resources that are staged on the [Fleet Manager hub cluster](./access-fleet-hub-cluster-kubernetes-api.md) across member clusters in a fleet. 
+In this article we explore how you can use Fleet Manager's intelligent resource placement capability to manage the distribution of cluster and namespace-scoped Kubernetes resources across member clusters in a fleet.
 
 Fleet Manager's resource placement capability is based on the [KubeFleet CNCF project](https://kubefleet.dev/).
+
+## High-level resource placement flow
+
+Follow this process to use Fleet Manager's intelligent resource placement:
+
+1. **Stage resources on hub cluster**: use CI/CD or GitOps tools to place your resource manifests onto the Fleet Manager hub cluster.
+1. **Create a resource placement**: author a placement that selects the resource and defines a policy that is used to select which member clusters will receive the resource.
+1. **Fleet Manager schedules resources**: Fleet Manager observes the resource placement and the selected scope and performs the distribution of the resources.
+
+To update resources, you can either update the resource (i.e. a namespace) directly on the hub cluster, or modify the resource placement so it picks different member clusters.
 
 :::zone target="docs" pivot="cluster-scope"
 
