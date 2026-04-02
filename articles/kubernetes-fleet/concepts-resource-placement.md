@@ -37,7 +37,7 @@ Fleet Manager's resource placement capability is based on the [KubeFleet CNCF pr
 
 Use this process to use Fleet Manager's intelligent resource placement:
 
-1. **Stage resources on hub cluster**: use CI/CD, GitOps or similar tools to place the manifests for resource for distributions onto the Fleet Manager hub cluster.
+1. **Stage resources on hub cluster**: use Continuous Deployment, GitOps or similar to apply the manifests for resource for distributions on the Fleet Manager hub cluster.
 1. **Create a resource placement**: create a placement manifest that selects the resource and defines a policy that is used to select which member clusters will receive the resource.
 1. **Apply resource placement on hub cluster**: take the placement manifest and apply to the hub cluster to initiate distribution of the resource.
 1. **Fleet Manager schedules resources**: Fleet Manager observes the resource placement and the selected scope and performs the distribution of the resources.
@@ -107,13 +107,13 @@ In multi-cluster environments, workloads often consist of both cluster-scoped an
 
 :::zone-end
 
-## Placement policy components
+## Resource placement components
 
-A placement policy, regardless of scope (cluster or namespace) consists of the following components:
+A resource placement, regardless of scope (cluster or namespace) consists of the following components:
 
-- **Resource Selectors**: select the resources to include via `resourceSelectors`.
-- **Placement Policy**: define how to pick clusters via `placeType` using one of `PickAll`, `PickFixed`, or `PickN` types.
-- **Rollout Strategy**: control how resources rollout across selected clusters by including an optional `strategy`.
+- **[Resource selectors](#resource-selectors)**: select the resources to include via `resourceSelectors`.
+- **[Placement policy](#placement-policy)**: define how to pick clusters via `placeType` using one of `PickAll`, `PickFixed`, or `PickN` types.
+- **[Rollout strategy](#configuring-rollout-strategy)**: control how resources rollout across selected clusters by including an optional `strategy`.
 
 :::zone target="docs" pivot="cluster-scope"
 
@@ -348,11 +348,12 @@ You can set both required and preferred affinities. Required affinities prevent 
 
 ##### `PickN` with affinities
 
-Using affinities with a `PickN` placement policy functions similarly to using affinities with pod scheduling. 
-
-:::zone target="docs" pivot="cluster-scope"
+Using affinities with a `PickN` placement policy functions similarly to using affinities with pod scheduling on a single Kubernetes cluster. 
 
 The following example shows how to deploy a resource onto three clusters. Only clusters with the `critical-allowed: "true"` label are valid placement targets, and preference is given to clusters with the label `critical-level: 1`:
+
+
+:::zone target="docs" pivot="cluster-scope"
 
 ```yaml
 apiVersion: placement.kubernetes-fleet.io/v1
@@ -385,13 +386,57 @@ spec:
 
 :::zone-end
 
+:::zone target="docs" pivot="namespace-scope"
+
+```yaml
+apiVersion: placement.kubernetes-fleet.io/v1
+kind: ResourcePlacement
+metadata:
+  name: app-configs-rp-pickn-critical-preferences
+  namespace: my-app
+spec:
+  resourceSelectors:
+    - group: ""
+      kind: ConfigMap
+      version: v1
+      labelSelector:
+        matchLabels:
+          app: my-application
+  policy:
+    placementType: PickN
+    numberOfClusters: 3
+    affinity:
+        clusterAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              weight: 20
+              preference:
+              - labelSelector:
+                  matchLabels:
+                    critical-level: 1
+            requiredDuringSchedulingIgnoredDuringExecution:
+                clusterSelectorTerms:
+                - labelSelector:
+                    matchLabels:
+                      critical-allowed: "true"
+```
+
+:::zone-end
+
 ##### `PickN` with topology spread constraints
 
-You can use topology spread constraints to force the division of the cluster placements across topology boundaries to satisfy availability requirements. For example, use these constraints to split placements across regions or update rings. You can also configure topology spread constraints to prevent scheduling if the constraint can't be met (`whenUnsatisfiable: DoNotSchedule`) or schedule as best possible (`whenUnsatisfiable: ScheduleAnyway`).
+Use topology spread constraints to force placements across topology boundaries in order to satisfy availability requirements.
+
+You can configure the behavior of topology spread constraints by using the `whenUnsatisfiable` property:
+
+* **DoNotSchedule:** if the constraint can't be met, fail the placement request.
+* **ScheduleAnyway:** if the constraint can't be met, place resources any way.
+
+The following example shows how to spread resources across multiple Azure regions and attempts to schedule across member clusters with different update days using a custom label `updateDay`.
+
+When the Azure region spread can't be met, placement will fail. If the `updateDay` constraint isn't met, the placement will still happen. 
+
 
 :::zone target="docs" pivot="cluster-scope"
-
-The following example shows how to spread resources out across multiple Azure regions and attempts to schedule across member clusters with different update days using a custom label `updateDay`.
 
 ```yaml
 apiVersion: placement.kubernetes-fleet.io/v1
@@ -404,6 +449,35 @@ spec:
       kind: Namespace
       name: prod-deployment
       version: v1
+  policy:
+    placementType: PickN
+    topologySpreadConstraints:
+    - maxSkew: 2
+      topologyKey: fleet.azure.com/location
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 2
+      topologyKey: updateDay
+      whenUnsatisfiable: ScheduleAnyway
+```
+
+:::zone-end
+
+:::zone target="docs" pivot="namespace-scope"
+
+```yaml
+apiVersion: placement.kubernetes-fleet.io/v1
+kind: ResourcePlacement
+metadata:
+  name: app-configs-rp-pickn-locations-updates
+  namespace: my-app
+spec:
+  resourceSelectors:
+    - group: ""
+      kind: ConfigMap
+      version: v1
+      labelSelector:
+        matchLabels:
+          app: my-application
   policy:
     placementType: PickN
     topologySpreadConstraints:
@@ -437,7 +511,9 @@ The table summarizes the available scheduling policy fields for each placement t
 
 ### Member cluster labels
 
-The `MemberCluster` resource on the hub cluster and be labeled like any Kubernetes resource. Additionally, Fleet Manager automatically adds the following read only labels to all member clusters. 
+The `MemberCluster` resource on the hub cluster can be labeled like any Kubernetes resource. 
+
+Additionally, Fleet Manager automatically adds the following read only labels to all member clusters. 
 
 | Label                           | Description                                                                    |
 |---------------------------------|--------------------------------------------------------------------------------|
@@ -462,7 +538,7 @@ The following properties are available for use as part of placement policies.
 | resources.kubernetes-fleet.io/available-memory       | Available memory resource units of cluster.   |
 | kubernetes.azure.com/per-cpu-core-cost               | The per-CPU core cost of the cluster.         |
 | kubernetes.azure.com/per-gb-memory-cost              | The per-GiB memory cost of the cluster.       | 
-| kubernetes.azure.com/vm-sizes/{vm-sku-name}/capacity | The available number of nodes of type [vm-sku-name][vm-sku-name] in the cluster*.<br/>Example VM SKU name: NV16as_v4.<br/>* In preview via v1beta1 API.                        |
+| kubernetes.azure.com/vm-sizes/{vm-sku-name}/capacity | The available number of nodes of type [vm-sku-name][vm-sku-name] in the cluster*.<br/>Example VM SKU name: NV16as_v4.<br/>* In preview via v1beta1 API. |
 
 
 * CPU and memory properties are represented as [Kubernetes resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes).
@@ -493,9 +569,9 @@ Fleet evaluates each cluster based on the properties specified in the condition.
 > [!NOTE]
 > If a member cluster doesn't possess the property expressed in the condition, it will automatically fail the condition.
 
-:::zone target="docs" pivot="cluster-scope"
-
 Here's an example placement policy to select only clusters with five or more nodes.
+
+:::zone target="docs" pivot="cluster-scope"
 
 ```yaml
 apiVersion: placement.kubernetes-fleet.io/v1
@@ -508,6 +584,38 @@ spec:
       kind: Namespace
       name: prod-deployment
       version: v1
+  policy:
+    placementType: PickAll
+    affinity:
+        clusterAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+                clusterSelectorTerms:
+                - propertySelector:
+                    matchExpressions:
+                    - name: "kubernetes-fleet.io/node-count"
+                      operator: Ge
+                      values:
+                      - "5"
+```
+
+:::zone-end
+
+:::zone target="docs" pivot="namespace-scope"
+
+```yaml
+apiVersion: placement.kubernetes-fleet.io/v1
+kind: ResourcePlacement
+metadata:
+  name: app-configs-rp-pickall-five-nodes
+  namespace: my-app
+spec:
+  resourceSelectors:
+    - group: ""
+      kind: ConfigMap
+      version: v1
+      labelSelector:
+        matchLabels:
+          app: my-application
   policy:
     placementType: PickAll
     affinity:
