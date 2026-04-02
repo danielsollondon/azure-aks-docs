@@ -27,7 +27,7 @@ Node auto-provisioning improves bin-packing, automates node lifecycle management
 
 | **Reason to Migrate**           | **Cluster Autoscaler (CAS)**                             | **Node Auto Provisioning (NAP)**                                   |
 |---------------------------------|----------------------------------------------------------|--------------------------------------------------------------------|
-| **VM Size Flexibility**         | Pre-existing node pools with single VM size per pool     | Dynamic provisioning of mixed VM sizes for cost/performance balance|
+| **VM Size Flexibility**         | Preexisting node pools with single VM size per pool     | Dynamic provisioning of mixed VM sizes for cost/performance balance|
 | **Cost Optimization**           | Adds/removes nodes in pools; risk of underutilization    | Intelligent bin-packing reduces fragmentation and lowers costs     |
 | **Management Overhead**         | Requires manual tuning of CAS profiles                   | Fully managed experience integrated with AKS                       |
 | **Lifecycle Management**        | Basic scale-up/scale-down only                           | Advanced node lifecycle optimization; manage node updates, disruption + more |
