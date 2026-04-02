@@ -49,6 +49,11 @@
       "source_path_from_root": "/articles/kubernetes-fleet/concepts-namespace-scoped-resource-propagation.md",
       "redirect_url": "/azure/kubernetes-fleet/concepts-resource-placement",
       "redirect_document_id": false
+    },
+    {
+      "source_path_from_root": "/articles/kubernetes-fleet/concepts-multi-cluster-workload-management.md",
+      "redirect_url": "/azure/kubernetes-fleet/concepts-resource-placement",
+      "redirect_document_id": false
     }
   ]
 }
