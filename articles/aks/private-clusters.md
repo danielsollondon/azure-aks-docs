@@ -388,7 +388,7 @@ az aks create \
 
 :::zone pivot="terraform"
 
-1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking](#create-a-private-aks-cluster-with-advanced-networking) to set up the Terraform configuration and create the necessary resources.
+1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking](#create-a-private-aks-cluster-with-advanced-networking) or [Create a private AKS cluster with default basic networking](#create-a-private-aks-cluster-with-default-basic-networking) to set up the Terraform configuration and create the necessary resources depending on your scenario. This example uses advanced networking.
 1. Add the following code to `main.tf` to create a private AKS cluster with a user-assigned identity and the public FQDN disabled:
 
     ```Terraform
@@ -451,7 +451,7 @@ az aks update \
 
 :::zone pivot="terraform"
 
-1. Add the following code to the existing `main.tf` to disable the public FQDN on an existing AKS cluster:
+1. Add the following code to the existing `main.tf` to disable the public FQDN on an existing AKS cluster. This example uses advanced networking. You can modify it to use default basic networking by changing the relevant Terraform resources and parameters.
 
     ```Terraform
     resource "azurerm_kubernetes_cluster" "this" {
@@ -542,7 +542,7 @@ az aks create \
 
 :::zone pivot="terraform"
 
-1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking using Terraform](#create-a-private-aks-cluster-with-advanced-networking) to set up the Terraform configuration and create the necessary resources.
+1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking](#create-a-private-aks-cluster-with-advanced-networking) or [Create a private AKS cluster with default basic networking](#create-a-private-aks-cluster-with-default-basic-networking) to set up the Terraform configuration and create the necessary resources depending on your scenario. This example uses advanced networking.
 1. Add the following code to `main.tf` to create a private AKS cluster with an AKS-managed private DNS zone:
 
     ```Terraform
@@ -575,7 +575,7 @@ az aks create \
 
 ## Create a private AKS cluster without a private DNS zone
 
-1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking using Terraform](#create-a-private-aks-cluster-with-advanced-networking) to set up the Terraform configuration and create the necessary resources.
+1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking](#create-a-private-aks-cluster-with-advanced-networking) or [Create a private AKS cluster with default basic networking](#create-a-private-aks-cluster-with-default-basic-networking) to set up the Terraform configuration and create the necessary resources depending on your scenario. This example uses advanced networking.
 1. Add the following code to `main.tf` to create the AKS cluster without a private DNS zone:
 
     ```Terraform
@@ -639,7 +639,7 @@ When using a custom private DNS zone, you're responsible for creating and managi
 
 For custom DNS configurations, you must use a user-assigned managed identity with the [Private DNS Zone Contributor][private-dns-zone-contributor-role] and [Network Contributor][network-contributor-role] roles.
 
-1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking using Terraform](#create-a-private-aks-cluster-with-advanced-networking) to set up the Terraform configuration and create the necessary resources.
+1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking](#create-a-private-aks-cluster-with-advanced-networking) or [Create a private AKS cluster with default basic networking](#create-a-private-aks-cluster-with-default-basic-networking) to set up the Terraform configuration and create the necessary resources depending on your scenario. This example uses advanced networking.
 1. Add the code to `main.tf` to create a private AKS cluster with a custom private DNS zone or subzone:
 
     ```Terraform
@@ -731,7 +731,7 @@ az aks create \
 
 :::zone pivot="terraform"
 
-1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking using Terraform](#create-a-private-aks-cluster-with-advanced-networking) to set up the Terraform configuration and create the necessary resources.
+1. Follow steps 1-3 in [Create a private AKS cluster with advanced networking](#create-a-private-aks-cluster-with-advanced-networking) or [Create a private AKS cluster with default basic networking](#create-a-private-aks-cluster-with-default-basic-networking) to set up the Terraform configuration and create the necessary resources depending on your scenario. This example uses advanced networking.
 1. Add the following code to `main.tf` to create a private AKS cluster with a custom private DNS zone and subdomain:
 
     ```Terraform
@@ -788,7 +788,7 @@ az aks update \
 
 :::zone pivot="terraform"
 
-1. Add the following code to the existing `main.tf` to update the private AKS cluster from a private DNS zone to public:
+1. Add the following code to the existing `main.tf` to update the private AKS cluster from a private DNS zone to public. This example uses advanced networking. You can modify it to use default basic networking by changing the relevant Terraform resources and parameters.
 
     ```Terraform
     resource "azurerm_kubernetes_cluster" "this" {
