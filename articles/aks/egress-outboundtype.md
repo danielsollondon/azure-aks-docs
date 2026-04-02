@@ -56,7 +56,7 @@ If `managedNatGatewayV2`, `managedNatGateway` or `userAssignedNatGateway` are se
 
 For more information, see [using NAT gateway with AKS](nat-gateway.md).
 
-### Outbound type: User-Defined Routes
+### <a id="outbound-type-of-userdefinedrouting"></a>Outbound type: User-Defined Routes
 
 > [!NOTE]
 > The `userDefinedRouting` outbound type is an advanced networking scenario and requires proper network configuration.
