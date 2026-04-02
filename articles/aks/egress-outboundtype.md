@@ -132,7 +132,7 @@ Each row shows whether the outbound type can be migrated to the types listed acr
 
 * Update the outbound configuration of your cluster using the [`az aks update`][az-aks-update] command.
 
-### Update cluster from `loadbalancer` to `managedNATGatewayV2`
+### <a id="update-cluster-from-loadbalancer-to-managednatgateway"></a>Update cluster from `loadbalancer` to `managedNATGatewayV2`
 
 ```azurecli-interactive
 az aks update --resource-group <resourceGroup> --name <clusterName> --outbound-type managedNATGatewayV2 --nat-gateway-managed-outbound-ipv6-count <number of managed outbound ipv6>
