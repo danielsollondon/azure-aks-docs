@@ -47,7 +47,7 @@ If `loadBalancer` is set, AKS automatically completes the following configuratio
 
 For more information, see [using a standard load balancer in AKS](load-balancer-standard.md).
 
-### Outbound type: NAT Gateway
+### <a id="outbound type-of-managedNatGateway-or-userAssignedNatGateway"></a>Outbound type: NAT Gateway
 
 If `managedNatGatewayV2`, `managedNatGateway` or `userAssignedNatGateway` are selected for `outboundType`, AKS relies on [Azure Networking NAT gateway](/azure/virtual-network/nat-gateway/manage-nat-gateway) for cluster egress.
 
