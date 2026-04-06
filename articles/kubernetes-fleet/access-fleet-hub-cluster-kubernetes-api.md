@@ -33,7 +33,7 @@ If your Azure Kubernetes Fleet Manager (Kubernetes Fleet) resource was created w
 
 If your Azure Kubernetes Fleet Manager (Kubernetes Fleet) resource was created with a private hub cluster, you can use it to centrally control scenarios like Kubernetes resource propagation. In this article, you learn how to access the Kubernetes API for a private Kubernetes Fleet hub cluster securely using Azure Bastion's native client tunneling feature.
 
-Using Azure Bastion protects your private hub cluster from exposing endpoints to the outside world, while still providing secure access. For more information, see [What is Azure Bastion?](https://docs.azure.cn/bastion/bastion-overview)
+Using Azure Bastion protects your private hub cluster from exposing endpoints to the outside world, while still providing secure access. For more information, see [What is Azure Bastion?](https://docs.azure.cn/bastion/bastion-overview).
 
 
 ## Before you begin
