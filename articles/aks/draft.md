@@ -1,8 +1,8 @@
 ---
 title: Draft extension for Azure Kubernetes Service (AKS) (preview)
 description: How to install and use Draft on your Azure Kubernetes Service (AKS) cluster using the Draft extension.
-author: qpetraroia
-ms.author: qpetraroia
+author: schaffererin
+ms.author: schaffererin
 ms.topic: concept-article
 ms.date: 06/22/2023
 ms.subservice: aks-developer
