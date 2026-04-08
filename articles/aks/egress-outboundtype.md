@@ -54,6 +54,10 @@ If `managedNatGatewayV2`, `managedNatGateway` or `userAssignedNatGateway` are se
 - Select `managedNatGatewayV2` or `managedNatGateway` when using managed virtual networks. AKS provisions a StandardV2 NAT gateway with `managedNatGatewayV2` and a Standard NAT gateway with `managedNatGateway` and attaches it to the cluster subnet. StandardV2 NAT gateway is recommended because it's zone-redundant by default and offers higher bandwidth and throughput than Standard. For information see, [StandardV2 NAT Gateway](/azure/nat-gateway/nat-overview#standardv2-nat-gateway).
 - Select `userAssignedNatGateway` when using bring-your-own virtual networking. This option requires that you have a NAT gateway created before cluster creation. Both Standard and StandardV2 NAT Gateways are supported.
 
+> [!IMPORTANT]
+> The `managedNatGatewayV2` outbound type is currently in PREVIEW.
+> See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability.
+> 
 For more information, see [using NAT gateway with AKS](nat-gateway.md).
 
 ### <a id="outbound-type-of-userdefinedrouting"></a>Outbound type: User-Defined Routes
