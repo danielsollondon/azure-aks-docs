@@ -14,6 +14,10 @@ While you can route egress traffic through an Azure Load Balancer, there are lim
 
 In a managed NAT gateway model, AKS manages the NAT gateway to provide outbound connectivity for your cluster nodes. AKS supports two managed NAT gateway options: the newer `managedNATGatewayV2` and the original `managedNATGateway`. `managedNATgatewayV2` uses StandardV2 NAT gateway which is **zone-redundant by default**, providing continued outbound connectivity even if one availability zone goes down. Unlike Standard NAT gateway, you don't need to specify a zone — zone redundancy is built in automatically. StandardV2 NAT gateway also supports IPv6, higher throughput, and flow logs. For more details, see [StandardV2 NAT gateway SKU](/azure/nat-gateway/nat-overview#standardv2-nat-gateway).
 
+> [!IMPORTANT]
+> The `managedNatGatewayV2` outbound type is currently in PREVIEW.
+> See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability.
+
 `userAssignedNatGateway` is a customer managed NAT gateway resource that you configure independently of AKS and is needed when using bring-your-own virtual networking.
 
 This article shows you how to create an Azure Kubernetes Service (AKS) cluster with a managed NAT gateway and a user-assigned NAT gateway for egress traffic. It also shows you how to disable OutboundNAT on Windows.
