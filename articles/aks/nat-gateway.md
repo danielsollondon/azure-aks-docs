@@ -53,81 +53,81 @@ The following table describes each outbound IP parameter and when to use it:
 
 1. Install or update the Azure CLI preview extension using the [`az extension add`](/cli/azure/extension#az-extension-add) or [`az extension update`](/cli/azure/extension#az-extension-update) command.
 
-The minimum version of the aks-preview Azure CLI extension is `20.0.0b1`.
-```azurecli-interactive
-# Install the aks-preview extension
-az extension add --name aks-preview
-# Update the extension to make sure you have the latest version installed
-az extension update --name aks-preview
-```
+    The minimum version of the aks-preview Azure CLI extension is `20.0.0b1`.
+    ```azurecli-interactive
+    # Install the aks-preview extension
+    az extension add --name aks-preview
+    # Update the extension to make sure you have the latest version installed
+    az extension update --name aks-preview
+    ```
 
 2. Register the `ManagedNATGatewayV2Preview` feature flag
 
-Register the `ManagedNATGatewayV2Preview` feature flag using the [`az feature register`](/cli/azure/feature#az-feature-register) command.
-
-```azurecli-interactive
-az feature register --namespace "Microsoft.ContainerService" --name "ManagedNATGatewayV2Preview"
-```
-
-Verify successful registration using the [`az feature show`](/cli/azure/feature#az-feature-show) command. It takes a few minutes for the registration to complete.
-
-```azurecli-interactive
-az feature show --namespace "Microsoft.ContainerService" --name "ManagedNATGatewayV2Preview"
-```
-
-Once the feature shows `Registered`, refresh the registration of the `Microsoft.ContainerService` resource provider using the [`az provider register`](/cli/azure/provider#az-provider-register) command.
-
-
-The following commands create the required resource group, the public IP and public IP prefix resources to attach to the NAT gateway, and the AKS cluster with a managed StandardV2 NAT gateway.
+    Register the `ManagedNATGatewayV2Preview` feature flag using the [`az feature register`](/cli/azure/feature#az-feature-register) command.
+    
+    ```azurecli-interactive
+    az feature register --namespace "Microsoft.ContainerService" --name "ManagedNATGatewayV2Preview"
+    ```
+    
+    Verify successful registration using the [`az feature show`](/cli/azure/feature#az-feature-show) command. It takes a few minutes for the registration to complete.
+    
+    ```azurecli-interactive
+    az feature show --namespace "Microsoft.ContainerService" --name "ManagedNATGatewayV2Preview"
+    ```
+    
+    Once the feature shows `Registered`, refresh the registration of the `Microsoft.ContainerService` resource provider using the [`az provider register`](/cli/azure/provider#az-provider-register) command.
+    
+    
+    The following commands create the required resource group, the public IP and public IP prefix resources to attach to the NAT gateway, and the AKS cluster with a managed StandardV2 NAT gateway.
 
 1. Create a resource group using the [`az group create`][az-group-create] command.
    
-```azurecli-interactive
-export RANDOM_SUFFIX=$(openssl rand -hex 3)
-export MY_RG="myResourceGroup$RANDOM_SUFFIX"
-export MY_AKS="myNatV2Cluster$RANDOM_SUFFIX"
-export MY_IP="myNatOutboundIP$RANDOM_SUFFIX"
-export MY_IP_PREFIX="myNatOutboundIPPrefix$RANDOM_SUFFIX"
-az group create --name $MY_RG --location "eastus2"
-```
+    ```azurecli-interactive
+    export RANDOM_SUFFIX=$(openssl rand -hex 3)
+    export MY_RG="myResourceGroup$RANDOM_SUFFIX"
+    export MY_AKS="myNatV2Cluster$RANDOM_SUFFIX"
+    export MY_IP="myNatOutboundIP$RANDOM_SUFFIX"
+    export MY_IP_PREFIX="myNatOutboundIPPrefix$RANDOM_SUFFIX"
+    az group create --name $MY_RG --location "eastus2"
+    ```
 2. Create a zone redundant IPv4 public IP address and public IP prefix using the [`az network public-ip create`][az-network-public-ip-create] command. Store `$MY_IP` and `$MY_IP_PREFIX` to use as outbound IPs for the managed StandardV2 NAT gateway.
 
-```azurecli-interactive
-export MY_IP_ID=$(az network public-ip create \
-    --resource-group $MY_RG \
-    --name $MY_IP \
-    --location eastus2 \
-    --sku StandardV2 \
-    --allocation-method Static \
-    --version IPv4 \
-    --zone 1 2 3 \
-    --query id \
-    --output tsv)
-
-export MY_IP_PREFIX_ID=$(az network public-ip prefix create \
-    --resource-group $MY_RG \
-    --name $MY_IP_PREFIX \
-    --location eastus2 \
-    --length 31 \
-    --sku StandardV2 \
-    --version IPv4 \
-    --zone 1 2 3 \
-    --query id \
-    --output tsv)
-```
+    ```azurecli-interactive
+    export MY_IP_ID=$(az network public-ip create \
+        --resource-group $MY_RG \
+        --name $MY_IP \
+        --location eastus2 \
+        --sku StandardV2 \
+        --allocation-method Static \
+        --version IPv4 \
+        --zone 1 2 3 \
+        --query id \
+        --output tsv)
+    
+    export MY_IP_PREFIX_ID=$(az network public-ip prefix create \
+        --resource-group $MY_RG \
+        --name $MY_IP_PREFIX \
+        --location eastus2 \
+        --length 31 \
+        --sku StandardV2 \
+        --version IPv4 \
+        --zone 1 2 3 \
+        --query id \
+        --output tsv)
+    ```
 3. Create the AKS cluster and reference the public IP address (`$MY_IP_ID`) and public IP prefix (`$MY_IP_PREFIX_ID`).
-```azurecli-interactive
-az aks create \
-    --resource-group $MY_RG \
-    --name $MY_AKS \
-    --node-count 3 \
-    --outbound-type managedNATGatewayV2 \
-    --nat-gateway-outbound-ips $MY_IP_ID \
-    --nat-gateway-outbound-ip-prefixes $MY_IP_PREFIX_ID \
-    --nat-gateway-idle-timeout 4 \
-    --generate-ssh-keys
-```
-
+    ```azurecli-interactive
+    az aks create \
+        --resource-group $MY_RG \
+        --name $MY_AKS \
+        --node-count 3 \
+        --outbound-type managedNATGatewayV2 \
+        --nat-gateway-outbound-ips $MY_IP_ID \
+        --nat-gateway-outbound-ip-prefixes $MY_IP_PREFIX_ID \
+        --nat-gateway-idle-timeout 4 \
+        --generate-ssh-keys
+    ```
+    
 Update the outbound IPs, outbound IP prefixes, managed outbound IP count, or idle timeout using the `az aks update` command with the `--nat-gateway-outbound-ips`, `--nat-gateway-outbound-ip-prefixes`, `--nat-gateway-managed-outbound-count`, `--nat-gateway-managed-outbound-ipv6-count`, or `--nat-gateway-idle-timeout` parameter. A `managedNATGatewayV2` can't be updated to switch between customer-defined and managed outbound IP addresses after creation. The outbound IP configuration is determined when the StandardV2 NAT Gateway is initially created and remains immutable.
 
 
