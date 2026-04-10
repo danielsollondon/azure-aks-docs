@@ -31,7 +31,7 @@ This article shows you how to create an Azure Kubernetes Service (AKS) cluster w
 > [!IMPORTANT]
 > In non-private clusters, API server cluster traffic is routed and processed through the clusters outbound type. To prevent API server traffic from being processed as public traffic, consider using a [private cluster][private-cluster], or check out the [API Server VNet Integration][api-server-vnet-integration] feature.
 
-## Create an AKS cluster with a `managedNATgatewayV2`
+## <a name="create-an-aks-cluster-with-a-managed-nat-gateway"></a>Create an AKS cluster with a `managedNATgatewayV2`
 
 * Create an AKS cluster with a managed StandardV2 NAT gateway using the [`az aks create`][az-aks-create] command with the `--outbound-type managedNATGateway`, `--nat-gateway-outbound-ips`, `--nat-gateway-outbound-ip-prefixes`, `--nat-gateway-managed-outbound-ip-count`, `--nat-gateway-managed-outbound-ipv6-count`, and `--nat-gateway-idle-timeout` parameters.
 * When configuring outbound IPs for a `managedNATgatewayV2`, you must use **one of the following approaches** — you cannot use both Azure-managed and customer-defined outbound IPs:
